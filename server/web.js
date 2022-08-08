@@ -1,34 +1,32 @@
-const express = require("express");
-const mysql = require("mysql");
-const connection = require("./config/database");
+const express = require("express")
+const app = express()
+const PORT = process.env.PORT || 8080
 
-const app = express();
+const cors = require("cors")
+const bodyParser = require("body-parser")
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
+app.use(cors())
 
-// configuration =========================
-app.set("port", process.env.PORT || 8000);
+const dotenv = require("dotenv")
+dotenv.config()
+const mysql = require("mysql")
 
-app.get("/", (req, res) => {
-  res.send("Root");
-});
+var con = mysql.createConnection({
+  host: process.env.DATABASE_SPRINT_HOST,
+  user: process.env.DATABASE_SPRINT_USER,
+  password: process.env.DATABASE_SPRINT_PASSWORD,
+  database: process.env.DATABASE_SPRINT_NAME,
+})
 
-app.get("/test", (req, res) => {
-  connection.query("SELECT * from homepage_subscribers", function (err, result, fields) {
-    if (err) throw err;
-    console.log(result);
-  });
-  // connection.end();
-});
+app.get("/userList", (req, res) => {
+  con.query("SELECT * FROM homepage_subscribers", function (err, result, fields) {
+    if (err) throw err
+    console.log(result)
+    res.send({ users: result })
+  })
+})
 
-//
-
-// app.get("/test", (req, res) => {
-//   connection.query("SELECT * from homepage_subscribers", (error, rows) => {
-//     if (error) throw error;
-//     console.log("User info is: ", rows);
-//     res.send(rows);
-//   });
-// });
-
-app.listen(app.get("port"), () => {
-  console.log("Express server listening on port " + app.get("port"));
-});
+app.listen(PORT, () => {
+  console.log(`Server On : http://localhost:${PORT}/`)
+})

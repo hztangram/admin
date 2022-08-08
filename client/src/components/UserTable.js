@@ -54,6 +54,16 @@ const rows = [
     createData(48, 'test20@naver.com', 'Y', 'main', 'kr', '2022.12.01'),
     createData(50, 'tete1@gmail.com', 'Y', 'smartrope', 'kr', '2022.11.01')
 ];
+console.log(rows);
+// const columns = ['id', 'email', 'checkAds', 'page', 'language', 'date'];
+
+// const data = [
+//     ['Joe James', 'Test Corp', 'Yonkers', 'NY'],
+//     ['John Walsh', 'Test Corp', 'Hartford', 'CT'],
+//     ['Bob Herm', 'Test Corp', 'Tampa', 'FL'],
+//     ['James Houston', 'Test Corp', 'Dallas', 'TX']
+// ];
+// const [users, setUsers] = useState(null);
 
 function descendingComparator(a, b, orderBy) {
     if (b[orderBy] < a[orderBy]) {
