@@ -4,10 +4,10 @@
   "description": "",
   "main": "web.js",
   "scripts": {
-    "start": "node web.js",
-    "backend": "nodemon web.js",
-    "frontend": "npm run front --prefix client",
-    "dev": "concurrently \"npm run backend\"  \"cd ../client && npm run start\""
+    "start": "node index.js",
+    "server": "nodemon server.js",
+    "client": "npm start --prefix ../client/",
+    "dev": "concurrently \"npm run server\"  \"npm run client\""
   },
   "keywords": [],
   "author": "",

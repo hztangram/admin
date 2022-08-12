@@ -17,14 +17,41 @@ var con = mysql.createConnection({
   user: process.env.DATABASE_SPRINT_USER,
   password: process.env.DATABASE_SPRINT_PASSWORD,
   database: process.env.DATABASE_SPRINT_NAME,
+
+  multipleStatements: true,
 })
 
-app.get("/userList", (req, res) => {
+app.get("/get/users/emailSubscribers", (req, res) => {
   con.query("SELECT * FROM homepage_subscribers", function (err, result, fields) {
     if (err) throw err
-    console.log(result)
     res.send({ users: result })
   })
+})
+app.post("/update/users/emailSubscribers", (req, res) => {
+  // var arr = req.body
+  // var sql
+  // var params
+  // for (let item of arr) {
+  //   sql = "UPDATE homepage_subscribers SET email = ? , path = ? , options = ?, modified = CURRENT_TIMESTAMP WHERE id = ?"
+  //   params = [item.email, item.path, item.options, item.id]
+  //   con.query(sql, params, function (err, result) {
+  //     if (err) throw err
+  //     console.log(arr)
+  //     res.send(result)
+  //   })
+  // }
+
+  var arr = req.body
+  var sql
+  var params
+  for (let item of arr) {
+    sql = "UPDATE homepage_subscribers SET email = ? , modified = CURRENT_TIMESTAMP WHERE id = ?"
+    params = [item.email, item.id]
+    con.query(sql, params, function (err, result) {
+      if (err) throw err
+    })
+  }
+  res.send("OK")
 })
 
 app.listen(PORT, () => {

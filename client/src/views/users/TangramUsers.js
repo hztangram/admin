@@ -9,7 +9,7 @@ import User from '../../components/User';
 // ==============================|| SAMPLE PAGE ||============================== //
 
 const SamplePage = () => (
-    <MainCard title="Sample Card">
+    <MainCard title="Tangram">
         <User />
     </MainCard>
 );
