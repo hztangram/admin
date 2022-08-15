@@ -9,12 +9,12 @@ export const getUsers = createAsyncThunk('GET_USERS', async () => {
             email: user.email,
             page: user.path.split('/')[0],
             lang: user.path.split('/')[1],
-            adAgree: user.options[0] === '1' ? 'Y' : 'N',
-            deleted: user.options[1],
+            adAgree: Number(user.options[0]),
+            deleted: Number(user.options[1]),
             created: user.created.slice(0, -5),
             modified: user.modified.slice(0, -5),
             edit: false,
-            modefied: false,
+            isUpdate: false,
             verified: true
         };
     });
@@ -23,8 +23,8 @@ export const getUsers = createAsyncThunk('GET_USERS', async () => {
 
 export const updateUsers = createAsyncThunk('UPDATE_USERS', async (_, { getState, rejectWithValue }) => {
     const _state = getState().emailSubscribeUsers;
-    const _modUsers = getState().emailSubscribeUsers.modefiedUsers;
-    const newData = _modUsers.map((user) => {
+    const _modefiedUsers = getState().emailSubscribeUsers.modefiedUsers;
+    const newData = _modefiedUsers.map((user) => {
         return {
             id: user.id,
             email: user.email
@@ -54,39 +54,40 @@ export const emailSubscribeUsers = createSlice({
         users: [],
         modefiedUsers: [],
         saveMode: 'N',
-        idArray: [],
+        checkArray: [],
         refresh: false
     },
     reducers: {
         toggleEdit(state, { payload }) {
-            let arr = [1, 10, 15];
             let _users = state.users;
             let _id = payload;
             let idx = _users.findIndex((a) => {
                 return a.id === _id;
             });
-            _users[idx].edit = !_users[idx].edit;
-            var isEdit = _users.filter((a) => {
-                return a.edit;
-            });
-            let _state = state;
-            if (isEdit.length > 0) {
-                _state.saveMode = 'Y';
-            } else {
-                _state.saveMode = 'N';
-            }
+            let idEdit = _users[idx].edit; //value
+            _users[idx].edit = !idEdit; //set
 
-            let _modUsers = state.modefiedUsers;
-            const remove = (array, _id) => {
-                const i = array.findIndex((_element) => _element.id === _id);
-                if (i > -1) array.splice(i, 0);
-            };
-            remove(_modUsers, _id);
-            console.log('rem' + _modUsers);
+            if (idEdit === true) _users[idx].isUpdate = false; //x 버튼 누르면 isUpdate = false
+        },
+        setUpdate(state, { payload }) {
+            let _users = state.users;
+            let _id = payload;
+            let _state = state;
+
+            let idx = _users.findIndex((el) => {
+                return el.id === _id;
+            });
+            _users[idx].isUpdate = true;
+
+            let updateArr = [];
+            _users.map((el) => {
+                return el.isUpdate && updateArr.push(el.id);
+            });
+            updateArr.length > 0 ? (_state.saveMode = 'Y') : (_state.saveMode = 'N');
         },
         setData(state, { payload }) {
             let _users = state.users;
-            let _modUsers = state.modefiedUsers;
+            let _modefiedUsers = state.modefiedUsers;
 
             let emailData = payload.emailData;
             const upsert = (array, element) => {
@@ -98,13 +99,13 @@ export const emailSubscribeUsers = createSlice({
                 _users.map((el, idx) => {
                     emailData.forEach((value, key) => {
                         if (el.id === key) {
-                            upsert(_modUsers, { id: key, email: value });
+                            upsert(_modefiedUsers, { id: key, email: value });
                         }
                     });
                 });
             };
             setEmailUpdate();
-            console.log('set' + _modUsers);
+            console.log(emailData);
         },
         verifyEmail(state, { payload }) {
             alert('이메일을 올바른 형식으로 작성해주세요.');
@@ -122,24 +123,21 @@ export const emailSubscribeUsers = createSlice({
         cleanData(state, { payload }) {
             let _state = state;
             let _users = state.users;
-            let _modUsers = state.modefiedUsers;
+            let _modefiedId = state.modefiedId;
             const setInit = () => {
                 _state.saveMode = 'N';
-                _state.idArray = [];
                 _state.refresh = true;
-                _modUsers: [];
+                _modefiedId: [];
                 _users.map((i) => {
                     i.edit = false;
                     i.verified = true;
                 });
             };
             setInit();
-            console.log('refresh t' + _state.refresh);
         },
         setRefresh(state, { payload }) {
             let _state = state;
             _state.refresh = false;
-            console.log('refresh f' + _state.refresh);
         }
     },
 
@@ -165,4 +163,4 @@ export const emailSubscribeUsers = createSlice({
     }
 });
 
-export let { toggleEdit, setData, cleanData, verifyEmail, setRefresh, resetRow } = emailSubscribeUsers.actions;
+export let { toggleEdit, setData, cleanData, verifyEmail, setRefresh, resetRow, setUpdate } = emailSubscribeUsers.actions;
