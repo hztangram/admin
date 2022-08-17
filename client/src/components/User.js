@@ -14,7 +14,18 @@ import SaveIcon from '@mui/icons-material/Save';
 import FormControl from '@mui/material/FormControl';
 import NativeSelect from '@mui/material/NativeSelect';
 import { useDispatch, useSelector } from 'react-redux';
-import { getUsers, toggleEdit, setData, updateUsers, cleanData, verifyEmail, setRefresh, setUpdate } from '../store/emailSubscribeUsers';
+import {
+    getUsers,
+    toggleEdit,
+    setData,
+    updateUsers,
+    cleanData,
+    verifyEmail,
+    setRefresh,
+    setUpdate,
+    deleteUsers,
+    toggleAll
+} from '../store/emailSubscribeUsers';
 import Button from '@mui/material/Button';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
@@ -23,42 +34,69 @@ import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
-
-import FormHelperText from '@mui/material/FormHelperText';
+import Pagination from '@mui/material/Pagination';
+import Stack from '@mui/material/Stack';
 
 export default function BasicTable() {
     const dispatch = useDispatch();
     const refresh = useSelector((state) => state.emailSubscribeUsers.refresh);
     const users = useSelector((state) => state.emailSubscribeUsers.users);
-    const saveMode = useSelector((state) => state.emailSubscribeUsers.saveMode) === 'Y' ? true : false;
+    const pageSize = useSelector((state) => state.emailSubscribeUsers.pageSize);
 
+    const saveMode = useSelector((state) => state.emailSubscribeUsers.saveMode) === 'Y' ? true : false;
+    let isEditLeng;
+    let editMode;
     useEffect(() => {
         dispatch(getUsers());
         refresh && dispatch(setRefresh());
     }, [refresh]);
 
+    useEffect(() => {
+        isEditLeng = users.reduce((prev, cur, idx) => {
+            let _cur = cur;
+            _cur.edit === true ? prev.set(cur.id, true) : prev.delete(cur.id);
+            return prev;
+        }, new Map()).size;
+        // console.log(users.map((a) => a.edit));
+        editMode = isEditLeng > 0 ? true : false;
+    }, [users.map((a) => a.edit)]);
+
+    const deleteHandler = () => {
+        let deleteArr = [];
+        users.map((a) => a.edit && deleteArr.push(Number(a.id)));
+        dispatch(deleteUsers({ deleteArr }));
+    };
     const updateHandler = () => {
         let rowArr = Array.from(document.querySelectorAll('[data-update="true"]'));
-        let emailArr = [];
-        rowArr.forEach((el) => {
-            emailArr.push(el.querySelector('[name="email"]'));
+        let resultData = rowArr.map((data) => {
+            let id = Number(data.getAttribute('data-key'));
+            let email = data.querySelector('[name="email"]').value;
+            let page = data.querySelector('[name="page"]').value;
+            let lang = data.querySelector('[name="lang"]').value;
+            let adAgree = Number(data.querySelector('[name="adAgree"]').value);
+            let deleted = Number(data.querySelector('[name="deleted"]').value);
+            return {
+                id: id,
+                email: email,
+                page: page,
+                lang: lang,
+                adAgree: adAgree,
+                deleted: deleted
+            };
         });
 
-        let emailData = new Map();
         let invalidEamil = [];
-
-        emailArr.map((i) => {
-            let id = Number(i.closest('tr').getAttribute('data-key')); //tr의 data-key
-            let value = i.value;
+        rowArr.map((row) => {
+            let value = row.querySelector('[name="email"]').value;
+            let id = row.getAttribute('data-key');
             var reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-            emailData.set(id, value);
             reg.test(value) === false && invalidEamil.push(id);
         });
 
         if (invalidEamil.length > 0) {
             dispatch(verifyEmail({ invalidEamil }));
         } else if (saveMode && invalidEamil.length <= 0) {
-            dispatch(setData({ emailData }));
+            dispatch(setData({ resultData }));
             dispatch(updateUsers())
                 .then((res) => {
                     if (res.payload.status === 200 && res.payload.data.success) {
@@ -89,9 +127,9 @@ export default function BasicTable() {
     return (
         <>
             <Grid container direction="row" justifyContent="flex-end" alignItems="center">
-                <FormControl sx={{ mr: 2, minWidth: 170 }} size="small" disabled={!saveMode}>
+                <FormControl sx={{ mr: 2, minWidth: 170 }} size="small" disabled={!editMode}>
                     <InputLabel>Page</InputLabel>
-                    <Select label="Page">
+                    <Select label="Page" defaultValue="main">
                         <MenuItem value="main">TANGRAM Main</MenuItem>
                         <MenuItem value="smartrope">SmartRope LED</MenuItem>
                         <MenuItem value="smartroperookie">SmartRope ROOKIE</MenuItem>
@@ -100,19 +138,18 @@ export default function BasicTable() {
                     </Select>
                 </FormControl>
 
-                <FormControl sx={{ mr: 2, minWidth: 170 }} size="small" disabled={!saveMode}>
+                <FormControl sx={{ mr: 2, minWidth: 170 }} size="small" disabled={!editMode}>
                     <InputLabel>Language</InputLabel>
-                    <Select label="Language">
+                    <Select label="Language" defaultValue="main">
                         <MenuItem value="main">TANGRAM Main</MenuItem>
                         <MenuItem value="smartrope">SmartRope LED</MenuItem>
                         <MenuItem value="smartroperookie">SmartRope ROOKIE</MenuItem>
                         <MenuItem value="smartropepure">SmartRope PURE</MenuItem>
                         <MenuItem value="shop">TANGRAM SHOP</MenuItem>
                     </Select>
-                    {saveMode}
                 </FormControl>
 
-                <Button variant="outlined" startIcon={<DeleteIcon />} sx={{ mr: 2 }} color="error">
+                <Button variant="outlined" startIcon={<DeleteIcon />} sx={{ mr: 2 }} color="error" onClick={deleteHandler}>
                     Delete
                 </Button>
                 <Button variant="contained" endIcon={<SendIcon />} onClick={updateHandler} disabled={!saveMode}>
@@ -136,7 +173,7 @@ export default function BasicTable() {
                         <TableRow>
                             <TableCell padding="checkbox">
                                 {/* <Checkbox color="primary" checked={checkHandler} /> */}
-                                <Checkbox color="primary" />
+                                <Checkbox color="primary" onClick={(e) => dispatch(toggleAll(e.target.checked))} />
                             </TableCell>
                             <TableCell align="left">ID</TableCell>
                             <TableCell align="left">Email</TableCell>
@@ -161,7 +198,13 @@ export default function BasicTable() {
                                         data-update={user.isUpdate}
                                     >
                                         <TableCell padding="checkbox">
-                                            <Checkbox color="primary" onClick={() => dispatch(toggleEdit(user.id))} />
+                                            <Checkbox
+                                                color="primary"
+                                                label="checked"
+                                                checked={user.edit}
+                                                name="checkbox"
+                                                onClick={() => dispatch(toggleEdit(user.id))}
+                                            />
                                         </TableCell>
                                         <TableCell component="th" scope="row">
                                             {user.id}
@@ -175,13 +218,13 @@ export default function BasicTable() {
                                                     variant="standard"
                                                     name="email"
                                                     inputProps={{ 'data-key': user.id }}
-                                                    onChange={() => dispatch(setUpdate(user.id))}
+                                                    onChange={(e) => dispatch(setUpdate())}
                                                 />
                                             </FormControl>
                                         </TableCell>
                                         <TableCell align="left">
                                             <FormControl variant="standard" fullWidth>
-                                                <Select defaultValue={user.page}>
+                                                <Select defaultValue={user.page} name="page">
                                                     <MenuItem value="main">TANGRAM Main</MenuItem>
                                                     <MenuItem value="smartrope">SmartRope LED</MenuItem>
                                                     <MenuItem value="smartroperookie">SmartRope ROOKIE</MenuItem>
@@ -192,7 +235,7 @@ export default function BasicTable() {
                                         </TableCell>
                                         <TableCell align="left">
                                             <FormControl variant="standard" fullWidth>
-                                                <Select defaultValue={user.lang}>
+                                                <Select defaultValue={user.lang} name="lang">
                                                     <MenuItem value="kr">KR</MenuItem>
                                                     <MenuItem value="en">EN</MenuItem>
                                                     <MenuItem value="jp">JP</MenuItem>
@@ -204,9 +247,17 @@ export default function BasicTable() {
                                         </TableCell>
                                         <TableCell align="left">
                                             <FormControl variant="standard" fullWidth>
-                                                <Select defaultValue={user.adAgree}>
+                                                <Select defaultValue={user.adAgree} name="adAgree">
                                                     <MenuItem value="1">Agree</MenuItem>
                                                     <MenuItem value="0">Disagree</MenuItem>
+                                                </Select>
+                                            </FormControl>
+                                        </TableCell>
+                                        <TableCell align="left" hidden>
+                                            <FormControl variant="standard" fullWidth>
+                                                <Select defaultValue={user.deleted} name="deleted">
+                                                    <MenuItem value="1">undeleted</MenuItem>
+                                                    <MenuItem value="0">deleted</MenuItem>
                                                 </Select>
                                             </FormControl>
                                         </TableCell>
@@ -226,7 +277,12 @@ export default function BasicTable() {
                                         name="row"
                                     >
                                         <TableCell padding="checkbox">
-                                            <Checkbox color="primary" onClick={() => dispatch(toggleEdit(user.id))} />
+                                            <Checkbox
+                                                color="primary"
+                                                checked={user.edit}
+                                                name="checkbox"
+                                                onClick={() => dispatch(toggleEdit(user.id))}
+                                            />
                                         </TableCell>
                                         <TableCell component="th" scope="row">
                                             {user.id}
@@ -250,6 +306,14 @@ export default function BasicTable() {
                                         <TableCell align="left">
                                             {(user.adAgree === 1 && 'Agree') || (user.adAgree === 0 && 'Disagree')}
                                         </TableCell>
+                                        <TableCell align="left" hidden>
+                                            <FormControl variant="standard" fullWidth>
+                                                <Select defaultValue={user.deleted} name="deleted">
+                                                    <MenuItem value="1">undeleted</MenuItem>
+                                                    <MenuItem value="0">deleted</MenuItem>
+                                                </Select>
+                                            </FormControl>
+                                        </TableCell>
                                         <TableCell align="left">{user.created}</TableCell>
                                         <TableCell align="left">{user.modified}</TableCell>
                                         <TableCell align="left" onClick={() => dispatch(toggleEdit(user.id))}>
@@ -261,6 +325,16 @@ export default function BasicTable() {
                     </TableBody>
                 </Table>
             </TableContainer>
+            {/* <Grid container direction="row" justifyContent="center" alignItems="center" sx={{ mt: 5 }}>
+                <Stack spacing={2}>
+                    <Pagination
+                        // count={count}
+                        showFirstButton
+                        showLastButton
+                        // onClick={dispatch(getUsers({ pageSize: pageSize, page: ...}))}
+                    />
+                </Stack>
+            </Grid> */}
         </>
     );
 }
