@@ -135,6 +135,7 @@ export const emailSubscribeUsers = createSlice({
         modefiedUsers: [],
         saveMode: 'N',
         checkArray: [],
+        checkAll: false,
         refresh: false,
         pageSize: 50
         // total: total
@@ -150,21 +151,32 @@ export const emailSubscribeUsers = createSlice({
             _users[idx].edit = !isEdit; //set
 
             if (isEdit === true) _users[idx].isUpdate = false; //x 버튼 누르면 isUpdate = false
+
             let isEditLeng = _users.filter((user) => {
                 return user.edit === true;
             }).length;
-            if (isEditLeng) {
-            }
+
             // if()//toggleAll상태에서 한개라도 체크풀면 toggleAll check false
+            if (isEditLeng < _users.length) {
+                state.checkAll = false;
+            } else {
+                state.checkAll = false;
+            }
+            if (isEditLeng === 0) {
+                state.saveMode = 'N';
+            }
         },
+
         toggleAll(state, { payload }) {
             let _users = state.users;
             let isChecked = payload;
             _users.map((user) => {
                 if (isChecked) {
                     user.edit = true;
+                    state.checkAll = true;
                 } else {
                     user.edit = false;
+                    state.checkAll = false;
                 }
             });
         },
@@ -231,6 +243,7 @@ export const emailSubscribeUsers = createSlice({
             const setInit = () => {
                 _state.saveMode = 'N';
                 _state.refresh = true;
+                _state.checkAll = false;
                 _modefiedId: [];
                 _users.map((i) => {
                     i.edit = false;

@@ -42,6 +42,7 @@ export default function BasicTable() {
     const refresh = useSelector((state) => state.emailSubscribeUsers.refresh);
     const users = useSelector((state) => state.emailSubscribeUsers.users);
     const pageSize = useSelector((state) => state.emailSubscribeUsers.pageSize);
+    const checkAll = useSelector((state) => state.emailSubscribeUsers.checkAll);
 
     const saveMode = useSelector((state) => state.emailSubscribeUsers.saveMode) === 'Y' ? true : false;
     let isEditLeng;
@@ -64,7 +65,11 @@ export default function BasicTable() {
     const deleteHandler = () => {
         let deleteArr = [];
         users.map((a) => a.edit && deleteArr.push(Number(a.id)));
-        dispatch(deleteUsers({ deleteArr }));
+        dispatch(deleteUsers({ deleteArr })).then((res) => {
+            if (res.payload.status === 200 && res.payload.data.success) {
+                dispatch(cleanData());
+            }
+        });
     };
     const updateHandler = () => {
         let rowArr = Array.from(document.querySelectorAll('[data-update="true"]'));
@@ -173,7 +178,7 @@ export default function BasicTable() {
                         <TableRow>
                             <TableCell padding="checkbox">
                                 {/* <Checkbox color="primary" checked={checkHandler} /> */}
-                                <Checkbox color="primary" onClick={(e) => dispatch(toggleAll(e.target.checked))} />
+                                <Checkbox color="primary" onClick={(e) => dispatch(toggleAll(e.target.checked))} checked={checkAll} />
                             </TableCell>
                             <TableCell align="left">ID</TableCell>
                             <TableCell align="left">Email</TableCell>
@@ -217,14 +222,13 @@ export default function BasicTable() {
                                                     helperText={!user.verified && '이메일을 올바른 형식으로 작성해주세요.'}
                                                     variant="standard"
                                                     name="email"
-                                                    inputProps={{ 'data-key': user.id }}
-                                                    onChange={(e) => dispatch(setUpdate())}
+                                                    onChange={(e) => dispatch(setUpdate(user.id))}
                                                 />
                                             </FormControl>
                                         </TableCell>
                                         <TableCell align="left">
                                             <FormControl variant="standard" fullWidth>
-                                                <Select defaultValue={user.page} name="page">
+                                                <Select defaultValue={user.page} name="page" onChange={(e) => dispatch(setUpdate(user.id))}>
                                                     <MenuItem value="main">TANGRAM Main</MenuItem>
                                                     <MenuItem value="smartrope">SmartRope LED</MenuItem>
                                                     <MenuItem value="smartroperookie">SmartRope ROOKIE</MenuItem>
@@ -235,7 +239,7 @@ export default function BasicTable() {
                                         </TableCell>
                                         <TableCell align="left">
                                             <FormControl variant="standard" fullWidth>
-                                                <Select defaultValue={user.lang} name="lang">
+                                                <Select defaultValue={user.lang} name="lang" onChange={(e) => dispatch(setUpdate(user.id))}>
                                                     <MenuItem value="kr">KR</MenuItem>
                                                     <MenuItem value="en">EN</MenuItem>
                                                     <MenuItem value="jp">JP</MenuItem>
@@ -247,15 +251,23 @@ export default function BasicTable() {
                                         </TableCell>
                                         <TableCell align="left">
                                             <FormControl variant="standard" fullWidth>
-                                                <Select defaultValue={user.adAgree} name="adAgree">
+                                                <Select
+                                                    defaultValue={user.adAgree}
+                                                    name="adAgree"
+                                                    onChange={(e) => dispatch(setUpdate(user.id))}
+                                                >
                                                     <MenuItem value="1">Agree</MenuItem>
                                                     <MenuItem value="0">Disagree</MenuItem>
                                                 </Select>
                                             </FormControl>
                                         </TableCell>
-                                        <TableCell align="left" hidden>
+                                        <TableCell align="left">
                                             <FormControl variant="standard" fullWidth>
-                                                <Select defaultValue={user.deleted} name="deleted">
+                                                <Select
+                                                    defaultValue={user.deleted}
+                                                    name="deleted"
+                                                    onChange={(e) => dispatch(setUpdate(user.id))}
+                                                >
                                                     <MenuItem value="1">undeleted</MenuItem>
                                                     <MenuItem value="0">deleted</MenuItem>
                                                 </Select>
@@ -307,12 +319,7 @@ export default function BasicTable() {
                                             {(user.adAgree === 1 && 'Agree') || (user.adAgree === 0 && 'Disagree')}
                                         </TableCell>
                                         <TableCell align="left" hidden>
-                                            <FormControl variant="standard" fullWidth>
-                                                <Select defaultValue={user.deleted} name="deleted">
-                                                    <MenuItem value="1">undeleted</MenuItem>
-                                                    <MenuItem value="0">deleted</MenuItem>
-                                                </Select>
-                                            </FormControl>
+                                            {user.deleted}
                                         </TableCell>
                                         <TableCell align="left">{user.created}</TableCell>
                                         <TableCell align="left">{user.modified}</TableCell>

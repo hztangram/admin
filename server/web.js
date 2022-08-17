@@ -41,10 +41,7 @@ app.get("/get/users/emailSubscribers", async (req, res) => {
 
 app.post("/update/users/emailSubscribers", async (req, res) => {
   var arr = req.body
-  var sql
-  var params
   var errorArr = []
-  let index = 0
   let connection
   try {
     connection = await mysql.getConnection()
@@ -68,6 +65,8 @@ app.post("/update/users/emailSubscribers", async (req, res) => {
       const emailUpdateInfo = `
         UPDATE homepage_subscribers
         SET email = '${item.email}'
+        , path = '${item.path}'
+        , options = '${item.options}'
         , modified = CURRENT_TIMESTAMP
         WHERE id = ${item.id}
       `
@@ -89,6 +88,38 @@ app.post("/update/users/emailSubscribers", async (req, res) => {
         message: "OK",
       })
     }
+  } catch (err) {
+    await connection.rollback()
+    await connection.release()
+    res.send({
+      success: false,
+      err: err.message,
+    })
+  }
+})
+
+app.post("/delete/users/emailSubscribers", async (req, res) => {
+  var arr = req.body
+  let connection
+  try {
+    connection = await mysql.getConnection()
+    await connection.beginTransaction()
+    for (item of arr) {
+      const emailDeleteInfo = `
+        UPDATE homepage_subscribers
+        SET options = '${item.options}'
+        , modified = CURRENT_TIMESTAMP
+        WHERE id = ${item.id}
+      `
+      const emailDeleteInfoResult = await connection.query(emailDeleteInfo)
+    }
+
+    await connection.commit()
+    await connection.release()
+    res.send({
+      success: true,
+      message: "OK",
+    })
   } catch (err) {
     await connection.rollback()
     await connection.release()
