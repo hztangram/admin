@@ -36,8 +36,16 @@ export const updateUsers = createAsyncThunk('UPDATE_USERS', async (_, { getState
     if (confirm('고객 정보를 수정하시겠습니까?')) {
         try {
             const response = await axios.post('http://localhost:8080/update/users/emailSubscribers', newData);
-            alert('수정이 완료되었습니다.');
-            return response;
+            if (response.data.success) {
+                alert('수정이 완료되었습니다.');
+                return response;
+            } else if ((response.data.success = false)) {
+                alert('이메일이 중복되었습니다.');
+                return false;
+            } else {
+                alert('알수없는오류');
+                return false;
+            }
         } catch (err) {
             alert(err);
             return rejectWithValue('개발사에 문의하세요.');

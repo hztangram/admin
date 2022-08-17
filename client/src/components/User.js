@@ -61,7 +61,7 @@ export default function BasicTable() {
             dispatch(setData({ emailData }));
             dispatch(updateUsers())
                 .then((res) => {
-                    if (res.payload.status === 200) {
+                    if (res.payload.status === 200 && res.payload.data.success) {
                         dispatch(cleanData());
                     }
                 })

@@ -1,10 +1,13 @@
 const express = require("express")
-const app = express()
-const PORT = process.env.PORT || 8080
-
 const cors = require("cors")
 const bodyParser = require("body-parser")
-app.use(bodyParser.urlencoded({ extended: false }))
+
+const app = express()
+app.use(
+  bodyParser.urlencoded({
+    extended: false,
+  })
+)
 app.use(bodyParser.json())
 app.use(cors())
 
@@ -12,50 +15,93 @@ const dotenv = require("dotenv")
 dotenv.config({
   path: "./.env",
 })
-const mysql = require("mysql")
 
-var con = mysql.createConnection({
-  host: process.env.DATABASE_SPRINT_HOST,
-  user: process.env.DATABASE_SPRINT_USER,
-  password: process.env.DATABASE_SPRINT_PASSWORD,
-  database: process.env.DATABASE_SPRINT_NAME,
-
-  multipleStatements: true,
-})
+const mysql = require("./config/db")
+const PORT = process.env.PORT || 8080
 
 app.get("/get/users/emailSubscribers", (req, res) => {
-  con.query("SELECT * FROM homepage_subscribers", function (err, result, fields) {
-    if (err) throw err
-    res.send({ users: result })
-  })
+  const sql = "SELECT * FROM homepage_subscribers"
+  try {
+    mysql.getConnection((err, connection) => {
+      // Connection 연결
+      console.log("emailSubscribers GET")
+      if (err) throw err
+      connection.query(sql, (err, result, fields) => {
+        // Query문 전송
+        if (err) {
+          console.error("emailSubscribers GET Error / " + err)
+          res.status(500).send("message : Internal Server Error")
+        } else {
+          if (result.length === 0) {
+            res.status(400).send({
+              success: false,
+              message: "DB response Not Found",
+            })
+          } else {
+            res.status(200).send({
+              success: true,
+              users: result,
+            })
+          }
+        }
+      })
+      connection.release() // Connectino Pool 반환
+    })
+  } catch (err) {
+    console.error("emailSubscribers GET Error / " + err)
+    res.status(500).send("message : Internal Server Error")
+  }
 })
-app.post("/update/users/emailSubscribers", (req, res) => {
-  // var arr = req.body
-  // var sql
-  // var params
-  // for (let item of arr) {
-  //   sql = "UPDATE homepage_subscribers SET email = ? , path = ? , options = ?, modified = CURRENT_TIMESTAMP WHERE id = ?"
-  //   params = [item.email, item.path, item.options, item.id]
-  //   con.query(sql, params, function (err, result) {
-  //     if (err) throw err
-  //     console.log(arr)
-  //     res.send(result)
-  //   })
-  // }
 
+app.post("/update/users/emailSubscribers", async (req, res) => {
   var arr = req.body
   var sql
   var params
-  for (let item of arr) {
-    sql = "UPDATE homepage_subscribers SET email = ? , modified = CURRENT_TIMESTAMP WHERE id = ?"
-    params = [item.email, item.id]
-    con.query(sql, params, function (err, result) {
-      if (err) throw err
+  var errorArr = []
+  let index = 0
+  try {
+    for (let i = 0; i < arr.length + 1; i++) {
+      sql = "select count(1) as dupleCnt from homepage_subscribers where email = ? and id <> ?"
+      params = [arr[i].email, arr[i].id]
+      mysql.query(sql, params, function (err, result) {
+        if (err) throw err
+        if (result.length > 0) {
+          if (result[0].dupleCnt === 0) {
+            // throw { message: item.id }
+            const sql = "UPDATE homepage_subscribers SET email = ? , modified = CURRENT_TIMESTAMP WHERE id = ?"
+            params = [arr[i].email, arr[i].id]
+            mysql.query(sql, params, function (err, result) {
+              if (err) throw err
+            })
+          } else {
+            errorArr.push(arr[i].id)
+          }
+        }
+        console.log(result.length)
+      })
+
+      if (arr.length === i) {
+        console.log(O)
+        if (errorArr.length > 0) {
+          res.send({
+            success: false,
+            message: "이메일 중복",
+            dupleCnt: errorArr,
+          })
+        } else {
+          res.send({
+            success: true,
+            message: "OK",
+          })
+        }
+      }
+    }
+  } catch (err) {
+    res.send({
+      success: false,
+      err: err.message,
     })
   }
-  res.send("OK")
 })
 
-app.listen(PORT, () => {
-  console.log(`Server On : http://localhost:${PORT}/`)
-})
+app.listen(PORT, () => console.log(`Server Start Listening on port ${PORT}`))
