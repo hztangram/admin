@@ -15,3 +15,4 @@
 .fixed-table tr,.fixed-table td{
         white-space: nowrap;
 }
+.hidden{display: none!important;}

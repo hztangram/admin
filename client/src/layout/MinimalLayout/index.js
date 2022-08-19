@@ -8,7 +8,7 @@ import Customization from '../Customization';
 const MinimalLayout = () => (
     <>
         <Outlet />
-        <Customization />
+        {/* <Customization /> */}
     </>
 );
 

@@ -1,6 +1,16 @@
 const express = require("express")
+const session = require("express-session")
+
 const cors = require("cors")
 const bodyParser = require("body-parser")
+
+const bcrypt = require("bcrypt")
+
+const dotenv = require("dotenv")
+dotenv.config({
+  path: "./.env",
+})
+const FileStore = require("session-file-store")(session)
 
 const app = express()
 app.use(
@@ -8,30 +18,57 @@ app.use(
     extended: false,
   })
 )
+
 app.use(bodyParser.json())
 app.use(cors())
-
-const dotenv = require("dotenv")
-dotenv.config({
-  path: "./.env",
-})
+app.use(
+  session({
+    secret: "blah blah",
+    resave: false,
+    saveUninitialized: true,
+    store: new FileStore(),
+  })
+)
 
 const mysql = require("./config/db")
 const PORT = process.env.PORT || 8080
 
-app.get("/get/users/emailSubscribers", async (req, res) => {
-  let result = []
-  try {
-    const emailSubscribersSql = "SELECT * FROM homepage_subscribers"
+app.get("/test", (req, res) => {
+  console.log(req.session) // session 생긴다!
+  res.send("session")
+})
 
-    const emailSubscribersSqlResult = await mysql.query(emailSubscribersSql)
+app.post("/get/users/emailSubscribers", async (req, res) => {
+  let result = []
+  let total = null
+  const { currentPage, pageSize } = req.body
+  console.log(currentPage)
+  try {
+    const emailSubscribersSql = `
+      SELECT *
+      FROM homepage_subscribers
+      WHERE SUBSTR(options, -1) = '1'
+      LIMIT ${currentPage}, ${pageSize}
+      `
+    const totalSql = `
+      SELECT COUNT(*) AS cnt
+      FROM homepage_subscribers
+      WHERE SUBSTR(options, -1) = '1'
+      `
+
+    const emailSubscribersSqlResult = await mysql.query(emailSubscribersSql, [currentPage, pageSize])
+    const emailSubscribersSqlTotal = await mysql.query(totalSql)
 
     if (emailSubscribersSqlResult.length > 0) {
       result = emailSubscribersSqlResult[0]
     }
+    if (emailSubscribersSqlTotal.length > 0) {
+      total = emailSubscribersSqlTotal[0][0].cnt
+    }
     res.status(200).send({
       success: true,
       users: result,
+      total: total,
     })
   } catch (err) {
     console.error("emailSubscribers GET Error / " + err.message)
@@ -106,7 +143,9 @@ app.post("/delete/users/emailSubscribers", async (req, res) => {
     await connection.beginTransaction()
     for (item of arr) {
       const emailDeleteInfo = `
-        DELETE homepage_subscribers
+        UPDATE homepage_subscribers
+        SET options = '${item.options}'
+        , modified = CURRENT_TIMESTAMP
         WHERE id = ${item.id}
       `
       const emailDeleteInfoResult = await connection.query(emailDeleteInfo)
@@ -128,7 +167,72 @@ app.post("/delete/users/emailSubscribers", async (req, res) => {
   }
 })
 
+app.post("/register", async (req, res) => {
+  const saltRounds = 10
+  let { name, email, password } = req.body
+  let connection
+  try {
+    connection = await mysql.getConnection()
+    await connection.beginTransaction()
+
+    const hash = await bcrypt.hash(password, saltRounds)
+    password = hash
+
+    const memberInsertInfo = `
+        INSERT INTO admin_members
+        (email, name, passwd, insert_dt, update_dt)
+        VALUES
+        ('${email}','${name}','${password}', CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)
+      `
+    const memberInsertInfoResult = await connection.query(memberInsertInfo)
+
+    await connection.commit()
+    await connection.release()
+    res.send({
+      success: true,
+      message: "OK",
+    })
+  } catch (err) {
+    await connection.rollback()
+    await connection.release()
+
+    if (err.code === "ER_DUP_ENTRY") {
+      res.send({
+        success: false,
+        err: err.message,
+        code: 1, //이메일 중복
+      })
+    } else {
+      res.send({
+        success: false,
+        err: err.message,
+        code: err.code,
+      })
+    }
+  }
+})
+
 app.listen(PORT, () => console.log(`Server Start Listening on port ${PORT}`))
+
+// app.get("/get/users/emailSubscribers", async (req, res) => {
+//   let result = []
+//   try {
+//     const emailSubscribersSql = "SELECT * FROM homepage_subscribers"
+
+//     const emailSubscribersSqlResult = await mysql.query(emailSubscribersSql)
+
+//     if (emailSubscribersSqlResult.length > 0) {
+//       result = emailSubscribersSqlResult[0]
+//     }
+//     res.status(200).send({
+//       success: true,
+//       users: result,
+//     })
+//   } catch (err) {
+//     console.error("emailSubscribers GET Error / " + err.message)
+//     res.status(500).send("message : Internal Server Error")
+//   }
+// })
 
 // app.get("/get/users/emailSubscribers", (req, res) => {
 //   const sql = "SELECT * FROM homepage_subscribers"

@@ -1,362 +1,382 @@
-import * as React from 'react';
-import PropTypes from 'prop-types';
-import { alpha } from '@mui/material/styles';
-import Box from '@mui/material/Box';
+import React, { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
-import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
-import TableSortLabel from '@mui/material/TableSortLabel';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import Checkbox from '@mui/material/Checkbox';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
+import InputLabel from '@mui/material/InputLabel';
+import EditIcon from '@mui/icons-material/Edit';
+import SaveIcon from '@mui/icons-material/Save';
+import FormControl from '@mui/material/FormControl';
+import NativeSelect from '@mui/material/NativeSelect';
+import { useDispatch, useSelector } from 'react-redux';
+import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
+import Box from '@mui/material/Box';
+
+import {
+    getUsers,
+    toggleEdit,
+    setData,
+    updateUsers,
+    cleanData,
+    verifyEmail,
+    setRefresh,
+    deleteUsers,
+    toggleAll,
+    selectUpdate,
+    toggleCheck,
+    setSaveMode,
+    setBatch
+} from '../store/emailSubscribeUsers';
+import Button from '@mui/material/Button';
 import DeleteIcon from '@mui/icons-material/Delete';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import { visuallyHidden } from '@mui/utils';
+import SendIcon from '@mui/icons-material/Send';
+import CloseIcon from '@mui/icons-material/Close';
+import Grid from '@mui/material/Grid';
+import TextField from '@mui/material/TextField';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import Pagination from '@mui/material/Pagination';
+import Stack from '@mui/material/Stack';
 
-function createData(id, email, checkAds, page, language, date) {
-    return {
-        id,
-        email,
-        checkAds,
-        page,
-        language,
-        date
+export default function BasicTable() {
+    const dispatch = useDispatch();
+    const refresh = useSelector((state) => state.emailSubscribeUsers.refresh);
+    const users = useSelector((state) => state.emailSubscribeUsers.users);
+
+    const checkAll = useSelector((state) => state.emailSubscribeUsers.checkAll);
+
+    const saveMode = useSelector((state) => state.emailSubscribeUsers.saveMode);
+    const currentPage = useSelector((state) => state.emailSubscribeUsers.currentPage);
+    const pageSize = useSelector((state) => state.emailSubscribeUsers.pageSize);
+    const total = useSelector((state) => state.emailSubscribeUsers.total);
+    const count = Math.floor(total / pageSize) + 1;
+    const editMode = useSelector((state) => state.emailSubscribeUsers.editMode);
+    const batchMode = useSelector((state) => state.emailSubscribeUsers.batchMode);
+
+    useEffect(() => {
+        dispatch(getUsers({}));
+        refresh && dispatch(setRefresh());
+    }, [refresh]);
+
+    const deleteHandler = () => {
+        let deleteArr = [];
+        users.map((a) => a.edit && deleteArr.push(Number(a.id)));
+        dispatch(deleteUsers({ deleteArr })).then((res) => {
+            if (res.payload.status === 200 && res.payload.data.success) {
+                dispatch(cleanData());
+            }
+        });
     };
-}
+    const updateHandler = () => {
+        let rowArr = Array.from(document.querySelectorAll('[data-update="true"]'));
+        let resultData = rowArr.map((data) => {
+            let id = Number(data.getAttribute('data-key'));
+            let email = data.querySelector('[name="email"]').value;
+            let page = data.querySelector('[name="page"]').value;
+            let lang = data.querySelector('[name="lang"]').value;
+            let adAgree = Number(data.querySelector('[name="adAgree"]').value);
+            let deleted = Number(data.querySelector('[name="deleted"]').value);
+            return {
+                id: id,
+                email: email,
+                page: page,
+                lang: lang,
+                adAgree: adAgree,
+                deleted: deleted
+            };
+        });
 
-const rows = [
-    createData(1, 'test1@naver.com', 'Y', 'main', 'kr', '2022.01.01'),
-    createData(2, 'test20@naver.com', 'Y', 'main', 'kr', '2022.12.01'),
-    createData(5, 'tete1@gmail.com', 'Y', 'smartrope', 'kr', '2022.11.01'),
-    createData(6, 'test1@naver.com', 'Y', 'main', 'kr', '2022.01.01'),
-    createData(8, 'test20@naver.com', 'Y', 'main', 'kr', '2022.12.01'),
-    createData(10, 'tete1@gmail.com', 'Y', 'smartrope', 'kr', '2022.11.01'),
-    createData(11, 'test1@naver.com', 'Y', 'main', 'kr', '2022.01.01'),
-    createData(12, 'test20@naver.com', 'Y', 'main', 'kr', '2022.12.01'),
-    createData(15, 'tete1@gmail.com', 'Y', 'smartrope', 'kr', '2022.11.01'),
-    createData(16, 'test1@naver.com', 'Y', 'main', 'kr', '2022.01.01'),
-    createData(18, 'test20@naver.com', 'Y', 'main', 'kr', '2022.12.01'),
-    createData(20, 'tete1@gmail.com', 'N', 'smartrope', 'kr', '2022.11.01'),
-    createData(30, 'tete1@gmail.com', 'Y', 'smartrope', 'kr', '2022.11.01'),
-    createData(31, 'test1@naver.com', 'N', 'main', 'kr', '2022.01.01'),
-    createData(32, 'test20@naver.com', 'N', 'main', 'kr', '2022.12.01'),
-    createData(35, 'tete1@gmail.com', 'N', 'smartrope', 'kr', '2022.11.01'),
-    createData(46, 'test1@naver.com', 'Y', 'main', 'kr', '2022.01.01'),
-    createData(48, 'test20@naver.com', 'Y', 'main', 'kr', '2022.12.01'),
-    createData(50, 'tete1@gmail.com', 'Y', 'smartrope', 'kr', '2022.11.01')
-];
-console.log(rows);
-// const columns = ['id', 'email', 'checkAds', 'page', 'language', 'date'];
+        let invalidEamil = [];
+        rowArr.map((row) => {
+            let value = row.querySelector('[name="email"]').value;
+            let id = row.getAttribute('data-key');
+            var reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+            reg.test(value) === false && invalidEamil.push(id);
+            invalidEamil.push(id);
+        });
 
-// const data = [
-//     ['Joe James', 'Test Corp', 'Yonkers', 'NY'],
-//     ['John Walsh', 'Test Corp', 'Hartford', 'CT'],
-//     ['Bob Herm', 'Test Corp', 'Tampa', 'FL'],
-//     ['James Houston', 'Test Corp', 'Dallas', 'TX']
-// ];
-// const [users, setUsers] = useState(null);
-
-function descendingComparator(a, b, orderBy) {
-    if (b[orderBy] < a[orderBy]) {
-        return -1;
-    }
-    if (b[orderBy] > a[orderBy]) {
-        return 1;
-    }
-    return 0;
-}
-
-function getComparator(order, orderBy) {
-    return order === 'desc' ? (a, b) => descendingComparator(a, b, orderBy) : (a, b) => -descendingComparator(a, b, orderBy);
-}
-
-// This method is created for cross-browser compatibility, if you don't
-// need to support IE11, you can use Array.prototype.sort() directly
-function stableSort(array, comparator) {
-    const stabilizedThis = array.map((el, index) => [el, index]);
-    stabilizedThis.sort((a, b) => {
-        const order = comparator(a[0], b[0]);
-        if (order !== 0) {
-            return order;
-        }
-        return a[1] - b[1];
-    });
-    return stabilizedThis.map((el) => el[0]);
-}
-
-const headCells = [
-    {
-        id: 'id',
-        format: (value) => Number(value),
-        disablePadding: true,
-        align: 'center',
-        label: 'ID'
-    },
-    {
-        id: 'email',
-        disablePadding: false,
-        align: 'center',
-        label: 'Email'
-    },
-    {
-        id: 'checkAds',
-        disablePadding: false,
-        label: 'CheckAds'
-    },
-    {
-        id: 'page',
-        disablePadding: false,
-        label: 'Page'
-    },
-    {
-        id: 'language',
-        disablePadding: false,
-        label: 'Language'
-    },
-    {
-        id: 'date',
-        disablePadding: false,
-        label: 'Date'
-    }
-];
-
-function EnhancedTableHead(props) {
-    const { onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort } = props;
-    const createSortHandler = (property) => (event) => {
-        onRequestSort(event, property);
-    };
-    return (
-        <TableHead>
-            <TableRow>
-                <TableCell padding="checkbox">
-                    <Checkbox
-                        color="primary"
-                        indeterminate={numSelected > 0 && numSelected < rowCount}
-                        checked={numSelected > 0 && numSelected === numSelected}
-                        onChange={onSelectAllClick}
-                        inputProps={{
-                            'aria-label': 'select all desserts'
-                        }}
-                    />
-                </TableCell>
-                {headCells.map((headCell) => (
-                    <TableCell
-                        key={headCell.id}
-                        align={'left'}
-                        padding={headCell.disablePadding ? 'none' : 'normal'}
-                        sortDirection={orderBy === headCell.id ? order : false}
-                    >
-                        <TableSortLabel
-                            active={orderBy === headCell.id}
-                            direction={orderBy === headCell.id ? order : 'asc'}
-                            onClick={createSortHandler(headCell.id)}
-                        >
-                            {headCell.label}
-                            {orderBy === headCell.id ? (
-                                <Box component="span" sx={visuallyHidden}>
-                                    {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
-                                </Box>
-                            ) : null}
-                        </TableSortLabel>
-                    </TableCell>
-                ))}
-            </TableRow>
-        </TableHead>
-    );
-}
-
-EnhancedTableHead.propTypes = {
-    numSelected: PropTypes.number.isRequired,
-    onRequestSort: PropTypes.func.isRequired,
-    onSelectAllClick: PropTypes.func.isRequired,
-    order: PropTypes.oneOf(['asc', 'desc']).isRequired,
-    orderBy: PropTypes.string.isRequired,
-    rowCount: PropTypes.number.isRequired
-};
-
-const EnhancedTableToolbar = (props) => {
-    const { numSelected } = props;
-
-    return (
-        <Toolbar
-            sx={{
-                pl: { sm: 2 },
-                pr: { xs: 1, sm: 1 },
-                ...(numSelected > 0 && {
-                    bgcolor: (theme) => alpha(theme.palette.primary.main, theme.palette.action.activatedOpacity)
+        if (invalidEamil.length > 0) {
+            dispatch(verifyEmail({ invalidEamil }));
+        } else if (saveMode && invalidEamil.length <= 0) {
+            dispatch(setData({ resultData }));
+            dispatch(updateUsers())
+                .then((res) => {
+                    if (res.payload.status === 200 && res.payload.data.success) {
+                        dispatch(cleanData());
+                    }
                 })
-            }}
-        >
-            {numSelected > 0 ? (
-                <Typography sx={{ flex: '1 1 100%' }} color="inherit" variant="subtitle1" component="div">
-                    {numSelected} selected
-                </Typography>
-            ) : (
-                <Typography sx={{ flex: '1 1 100%' }} variant="h6" id="tableTitle" component="div">
-                    Nutrition
-                </Typography>
-            )}
-
-            {numSelected > 0 ? (
-                <Tooltip title="Delete">
-                    <IconButton>
-                        <DeleteIcon />
-                    </IconButton>
-                </Tooltip>
-            ) : (
-                <Tooltip title="Filter list">
-                    <IconButton>
-                        <FilterListIcon />
-                    </IconButton>
-                </Tooltip>
-            )}
-        </Toolbar>
-    );
-};
-
-EnhancedTableToolbar.propTypes = {
-    numSelected: PropTypes.number.isRequired
-};
-
-export default function EnhancedTable() {
-    const [order, setOrder] = React.useState('asc');
-    const [orderBy, setOrderBy] = React.useState('calories');
-    const [selected, setSelected] = React.useState([]);
-    const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(5);
-
-    const handleRequestSort = (event, property) => {
-        const isAsc = orderBy === property && order === 'asc';
-        setOrder(isAsc ? 'desc' : 'asc');
-        setOrderBy(property);
-    };
-
-    // const handleSelectAllClick = (event) => {
-    //     if (event.target.checked) {
-    //         const newSelected = rows.map((n) => n.id);
-    //         setSelected(newSelected);
-    //         return;
-    //     }
-    //     setSelected([]);
-    // };
-    const handleSelectAllClick = (event) => {
-        if (event.target.checked) {
-            const newSelecteds = stableSort(rows, getComparator(order, orderBy))
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((n) => n.id);
-
-            setSelected(newSelecteds);
-            return;
+                .catch((error) => {
+                    console.error(error);
+                });
         }
-        setSelected([]);
     };
 
-    const handleClick = (event, id) => {
-        const selectedIndex = selected.indexOf(id);
-        let newSelected = [];
+    //checkbox
 
-        if (selectedIndex === -1) {
-            newSelected = newSelected.concat(selected, id);
-        } else if (selectedIndex === 0) {
-            newSelected = newSelected.concat(selected.slice(1));
-        } else if (selectedIndex === selected.length - 1) {
-            newSelected = newSelected.concat(selected.slice(0, -1));
-        } else if (selectedIndex > 0) {
-            newSelected = newSelected.concat(selected.slice(0, selectedIndex), selected.slice(selectedIndex + 1));
-        }
+    const _main = 'TANGRAM Main';
+    const _smartrope = 'SmartRope LED';
+    const _smartroperookie = 'SmartRope ROOKIE';
+    const _smartropepure = 'SmartRope PURE';
+    const _shop = 'TANGRAM SHOP';
 
-        setSelected(newSelected);
-    };
+    const _kr = 'KR';
+    const _en = 'EN';
+    const _jp = 'JP';
+    const _cn = 'CN';
+    const _de = 'DE';
+    const _fr = 'FR';
 
-    const handleChangePage = (event, newPage) => {
-        setPage(newPage);
-        setSelected([]);
-    };
-
-    const handleChangeRowsPerPage = (event) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
-        setPage(0);
-    };
-
-    const isSelected = (id) => selected.indexOf(id) !== -1;
-
-    // Avoid a layout jump when reaching the last page with empty rows.
-    const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
     return (
-        <Box sx={{ width: '100%' }}>
-            <Paper sx={{ width: '100%', mb: 2 }}>
-                <EnhancedTableToolbar numSelected={selected.length} />
-                <TableContainer>
-                    <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle" size={'medium'}>
-                        <EnhancedTableHead
-                            numSelected={selected.length}
-                            order={order}
-                            orderBy={orderBy}
-                            onSelectAllClick={handleSelectAllClick}
-                            onRequestSort={handleRequestSort}
-                            rowCount={rowsPerPage}
-                        />
-                        <TableBody>
-                            {/* if you don't need to support IE11, you can replace the `stableSort` call with:
-                 rows.slice().sort(getComparator(order, orderBy)) */}
-                            {stableSort(rows, getComparator(order, orderBy))
-                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                .map((row, index) => {
-                                    const isItemSelected = isSelected(row.id);
-                                    const labelId = `enhanced-table-checkbox-${index}`;
+        <>
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
 
-                                    return (
-                                        <TableRow
-                                            hover
-                                            onClick={(event) => handleClick(event, row.id)}
-                                            role="checkbox"
-                                            aria-checked={isItemSelected}
-                                            tabIndex={-1}
-                                            key={row.id}
-                                            selected={isItemSelected}
-                                        >
-                                            <TableCell padding="checkbox">
-                                                <Checkbox
-                                                    color="primary"
-                                                    checked={isItemSelected}
-                                                    inputProps={{
-                                                        'aria-labelledby': labelId
-                                                    }}
+                    height: '42px'
+                }}
+            >
+                <Box>
+                    <FormGroup>
+                        <FormControlLabel
+                            control={<Switch onChange={() => dispatch(setBatch())} />}
+                            label={batchMode ? '일괄수정모드 끄기' : '일괄수정모드 켜기'}
+                        />
+                    </FormGroup>
+                </Box>
+                <Box>
+                    {batchMode && (
+                        <>
+                            <FormControl sx={{ mr: 2, minWidth: 170 }} size="small" disabled={!editMode}>
+                                <InputLabel>Page</InputLabel>
+                                <Select label="Page" defaultValue="main" onChange={() => dispatch(selectUpdate())}>
+                                    <MenuItem value="main">TANGRAM Main</MenuItem>
+                                    <MenuItem value="smartrope">SmartRope LED</MenuItem>
+                                    <MenuItem value="smartroperookie">SmartRope ROOKIE</MenuItem>
+                                    <MenuItem value="smartropepure">SmartRope PURE</MenuItem>
+                                    <MenuItem value="shop">TANGRAM SHOP</MenuItem>
+                                </Select>
+                            </FormControl>
+                            <FormControl sx={{ mr: 2, minWidth: 170 }} size="small" disabled={!editMode}>
+                                <InputLabel>Language</InputLabel>
+                                <Select label="Language" defaultValue="kr">
+                                    <MenuItem value="kr">KR</MenuItem>
+                                    <MenuItem value="en">EN</MenuItem>
+                                    <MenuItem value="jp">JP</MenuItem>
+                                    <MenuItem value="cn">CN</MenuItem>
+                                    <MenuItem value="de">DE</MenuItem>
+                                    <MenuItem value="fr">FR</MenuItem>
+                                </Select>
+                            </FormControl>
+                            <Button variant="outlined" startIcon={<DeleteIcon />} sx={{ mr: 2 }} color="error" disabled={!editMode}>
+                                Delete
+                            </Button>
+                        </>
+                    )}
+                    <Button variant="contained" endIcon={<SendIcon />} disabled={!saveMode}>
+                        Save
+                    </Button>
+                </Box>
+            </Box>
+
+            <TableContainer component={Paper}>
+                <Table sx={{ minWidth: 650 }} stickyHeader className="fixed-table">
+                    <colgroup>
+                        <col style={{ width: '5%' }} />
+                        <col style={{ width: '5%' }} />
+                        <col style={{ width: '14%' }} />
+                        <col style={{ width: '14%' }} />
+                        <col style={{ width: '14%' }} />
+                        <col style={{ width: '14%' }} />
+                        <col style={{ width: '14%' }} />
+                        <col style={{ width: '14%' }} />
+                        <col style={{ width: '56%' }} />
+                    </colgroup>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell padding="checkbox">
+                                {/* <Checkbox color="primary" checked={checkHandler} /> */}
+                                <Checkbox color="primary" checked={checkAll} />
+                            </TableCell>
+                            <TableCell align="left">ID</TableCell>
+                            <TableCell align="left">Email</TableCell>
+                            <TableCell align="left">Page</TableCell>
+                            <TableCell align="left">Language</TableCell>
+                            <TableCell align="left">Ad Agree</TableCell>
+                            <TableCell align="left">Created Date</TableCell>
+                            <TableCell align="left">Modified Date</TableCell>
+                            <TableCell align="center">Edit</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {users &&
+                            users.map((user) =>
+                                user.edit ? (
+                                    <TableRow
+                                        key={user.id}
+                                        data-key={user.id}
+                                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                        name="row"
+                                        data-edit={user.edit}
+                                        data-update={user.isUpdate}
+                                    >
+                                        <TableCell padding="checkbox">
+                                            <Checkbox
+                                                color="primary"
+                                                name="checkbox"
+                                                onChange={(e) => dispatch(toggleCheck({ id: user.id, checked: e.target.checked }))}
+                                            />
+                                        </TableCell>
+                                        <TableCell component="th" scope="row">
+                                            {user.id}
+                                        </TableCell>
+                                        <TableCell align="left">
+                                            <FormControl fullWidth>
+                                                <TextField
+                                                    error={user.verified ? false : true}
+                                                    defaultValue={user.email}
+                                                    helperText={!user.verified && '이메일을 올바른 형식으로 작성해주세요.'}
+                                                    variant="standard"
+                                                    name="email"
+                                                    onChange={() => dispatch(setSaveMode(user.id))}
                                                 />
-                                            </TableCell>
-                                            <TableCell component="th" id={row.id} scope="row" padding="none" align="left">
-                                                {row.id}
-                                            </TableCell>
-                                            <TableCell align="left">{row.email}</TableCell>
-                                            <TableCell align="left">{row.checkAds}</TableCell>
-                                            <TableCell align="left">{row.page}</TableCell>
-                                            <TableCell align="left">{row.language}</TableCell>
-                                            <TableCell align="left">{row.date}</TableCell>
-                                        </TableRow>
-                                    );
-                                })}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-                <TablePagination
-                    rowsPerPageOptions={[5, 10, 25]}
-                    component="div"
-                    count={rows.length}
-                    rowsPerPage={rowsPerPage}
-                    page={page}
-                    onPageChange={handleChangePage}
-                    onRowsPerPageChange={handleChangeRowsPerPage}
-                />
-            </Paper>
-        </Box>
+                                            </FormControl>
+                                        </TableCell>
+                                        <TableCell align="left">
+                                            <FormControl variant="standard" fullWidth>
+                                                <Select
+                                                    defaultValue={user.page}
+                                                    name="page"
+                                                    onChange={() => dispatch(setSaveMode(user.id))}
+                                                >
+                                                    <MenuItem value="main">TANGRAM Main</MenuItem>
+                                                    <MenuItem value="smartrope">SmartRope LED</MenuItem>
+                                                    <MenuItem value="smartroperookie">SmartRope ROOKIE</MenuItem>
+                                                    <MenuItem value="smartropepure">SmartRope PURE</MenuItem>
+                                                    <MenuItem value="shop">TANGRAM SHOP</MenuItem>
+                                                </Select>
+                                            </FormControl>
+                                        </TableCell>
+                                        <TableCell align="left">
+                                            <FormControl variant="standard" fullWidth>
+                                                <Select
+                                                    defaultValue={user.lang}
+                                                    name="lang"
+                                                    onChange={() => dispatch(setSaveMode(user.id))}
+                                                >
+                                                    <MenuItem value="kr">KR</MenuItem>
+                                                    <MenuItem value="en">EN</MenuItem>
+                                                    <MenuItem value="jp">JP</MenuItem>
+                                                    <MenuItem value="cn">CN</MenuItem>
+                                                    <MenuItem value="de">DE</MenuItem>
+                                                    <MenuItem value="fr">FR</MenuItem>
+                                                </Select>
+                                            </FormControl>
+                                        </TableCell>
+                                        <TableCell align="left">
+                                            <FormControl variant="standard" fullWidth>
+                                                <Select
+                                                    defaultValue={user.adAgree}
+                                                    name="adAgree"
+                                                    onChange={() => dispatch(setSaveMode(user.id))}
+                                                >
+                                                    <MenuItem value="1">Agree</MenuItem>
+                                                    <MenuItem value="0">Disagree</MenuItem>
+                                                </Select>
+                                            </FormControl>
+                                        </TableCell>
+                                        <TableCell align="left" className="hidden">
+                                            <FormControl variant="standard" fullWidth hidden>
+                                                <Select
+                                                    defaultValue={user.deleted}
+                                                    name="deleted"
+                                                    onChange={() => dispatch(setSaveMode(user.id))}
+                                                >
+                                                    <MenuItem value="1">undeleted</MenuItem>
+                                                    <MenuItem value="0">deleted</MenuItem>
+                                                </Select>
+                                            </FormControl>
+                                        </TableCell>
+                                        <TableCell align="left">{user.created}</TableCell>
+                                        <TableCell align="left">{user.modified}</TableCell>
+                                        <TableCell align="center">
+                                            <Button onClick={() => dispatch(toggleEdit(user.id))}>
+                                                <CloseIcon className="secondary" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    <TableRow
+                                        key={user.id}
+                                        data-key={user.id}
+                                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                        data-edit={user.edit}
+                                        data-update={user.isUpdate}
+                                        name="row"
+                                    >
+                                        <TableCell padding="checkbox">
+                                            <Checkbox
+                                                color="primary"
+                                                name="checkbox"
+                                                onChange={(e) => dispatch(toggleCheck({ id: user.id, checked: e.target.checked }))}
+                                            />
+                                        </TableCell>
+                                        <TableCell component="th" scope="row">
+                                            {user.id}
+                                        </TableCell>
+                                        <TableCell align="left">{user.email}</TableCell>
+                                        <TableCell align="left">
+                                            {(user.page === 'main' && _main) ||
+                                                (user.page === 'smartrope' && _smartrope) ||
+                                                (user.page === 'smartroperookie' && _smartroperookie) ||
+                                                (user.page === 'smartropepure' && _smartropepure) ||
+                                                (user.page === 'shop' && _shop)}
+                                        </TableCell>
+                                        <TableCell align="left">
+                                            {(user.lang === 'kr' && _kr) ||
+                                                (user.lang === 'en' && _en) ||
+                                                (user.lang === 'jp' && _jp) ||
+                                                (user.lang === 'cn' && _cn) ||
+                                                (user.lang === 'de' && _de) ||
+                                                (user.lang === 'fr' && _fr)}
+                                        </TableCell>
+                                        <TableCell align="left">
+                                            {(user.adAgree === 1 && 'Agree') || (user.adAgree === 0 && 'Disagree')}
+                                        </TableCell>
+                                        <TableCell align="left" className="hidden">
+                                            <p>{user.deleted}</p>
+                                        </TableCell>
+                                        <TableCell align="left">{user.created}</TableCell>
+                                        <TableCell align="left">{user.modified}</TableCell>
+                                        <TableCell align="center">
+                                            <Button onClick={() => dispatch(toggleEdit(user.id))}>
+                                                <EditIcon color="primary" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                )
+                            )}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+            <Grid container direction="row" justifyContent="center" alignItems="center" sx={{ mt: 5 }}>
+                <Stack spacing={2}>
+                    <Pagination
+                        count={count}
+                        showFirstButton
+                        showLastButton
+                        onChange={(_, page) => dispatch(getUsers({ currentPage: pageSize * (page - 1) }))}
+                    />
+                </Stack>
+            </Grid>
+        </>
     );
 }

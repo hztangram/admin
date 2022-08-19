@@ -4,14 +4,14 @@ import { Typography } from '@mui/material';
 // project imports
 import MainCard from 'ui-component/cards/MainCard';
 // import UserTable from '../../components/UserTable';
-import User from '../../components/User';
+import User from '../../components/UserTable';
 
 // ==============================|| SAMPLE PAGE ||============================== //
 
-const SamplePage = () => (
+const TangramUsers = () => (
     <MainCard title="Tangram">
         <User />
     </MainCard>
 );
 
-export default SamplePage;
+export default TangramUsers;

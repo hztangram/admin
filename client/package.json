@@ -1,8 +1,8 @@
 {
-    "name": "berry-material-react-free",
+    "name": "Tangram Admin",
     "version": "3.2.0",
     "private": true,
-    "homepage": "https://berrydashboard.io/free",
+    "homepage": "https://berrydashboard.io/",
     "dependencies": {
         "@emotion/cache": "^11.9.3",
         "@emotion/react": "^11.9.3",

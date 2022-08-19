@@ -1,11 +1,18 @@
 import { useRoutes } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 // routes
 import MainRoutes from './MainRoutes';
 import AuthenticationRoutes from './AuthenticationRoutes';
+import TotalRoutes from './TotalRoutes';
 
 // ==============================|| ROUTING RENDER ||============================== //
 
+// export default function ThemeRoutes() {
+//     return useRoutes([MainRoutes, AuthenticationRoutes]);
+// }
+
 export default function ThemeRoutes() {
-    return useRoutes([MainRoutes, AuthenticationRoutes]);
+    const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+    return useRoutes(TotalRoutes(isLoggedIn));
 }
