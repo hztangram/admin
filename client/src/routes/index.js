@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { useRoutes } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { checkLogin } from '../store/auth';
 
 // routes
 import MainRoutes from './MainRoutes';
@@ -13,6 +15,12 @@ import TotalRoutes from './TotalRoutes';
 // }
 
 export default function ThemeRoutes() {
-    const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+    const dispatch = useDispatch();
+    useEffect(() => {
+        dispatch(checkLogin());
+    }, []);
+
+    /* const isLoggedIn = useSelector((state) => state.auth.isLoggedIn); */
+    const isLoggedIn = false;
     return useRoutes(TotalRoutes(isLoggedIn));
 }

@@ -10,22 +10,20 @@ import { useNavigate } from 'react-router-dom';
 // project imports
 import AnimateButton from 'ui-component/extended/AnimateButton';
 
-import { postRegister } from '../store/register';
+import { postRegister, setSuccess } from '../store/register';
 
 // ===========================||  REGISTER ||=========================== //
 
-const RegisterTable = () => {
-    let form;
-    let name;
-    let email;
-    let password;
-
+const RegisterForm = () => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const success = useSelector((state) => state.register.success);
     const navigate = useNavigate();
     useEffect(() => {
-        if (success) navigate('/');
+        if (success) {
+            dispatch(setSuccess({ result: false }));
+            navigate('/');
+        }
     }, [success]);
 
     const [nameErr, setNameErr] = useState(false);
@@ -123,4 +121,4 @@ const RegisterTable = () => {
     );
 };
 
-export default RegisterTable;
+export default RegisterForm;

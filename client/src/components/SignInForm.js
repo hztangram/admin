@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useState, useEffect } from 'react';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -12,17 +12,22 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { useSelector, useDispatch } from 'react-redux';
 
+import { postLogin } from '../store/login';
 const theme = createTheme();
 
-export default function SignInTable() {
+export default function SignInForm() {
+    const dispatch = useDispatch();
+
     const handleSubmit = (event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
-        console.log({
+        const result = {
             email: data.get('email'),
             password: data.get('password')
-        });
+        };
+        dispatch(postLogin({ result }));
     };
 
     return (

@@ -5,7 +5,7 @@ import { Typography } from '@mui/material';
 import MainCard from 'ui-component/cards/MainCard';
 import { Box, Grid } from '@mui/material';
 
-import SignInTable from '../../components/SignInTable';
+import SignInForm from '../../components/SignInForm';
 
 // ==============================|| SAMPLE PAGE ||============================== //
 
@@ -32,7 +32,7 @@ const SignIn = () => (
             }}
         >
             <Box sx={{ p: { xs: 2, sm: 3, xl: 5 } }}>
-                <SignInTable />
+                <SignInForm />
             </Box>
         </MainCard>
     </Grid>

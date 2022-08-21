@@ -33,7 +33,12 @@ export const register = createSlice({
     initialState: {
         success: false
     },
-    reducers: {},
+    reducers: {
+        setSuccess(state, { payload }) {
+            let { result } = payload;
+            state.success = result;
+        }
+    },
 
     extraReducers: {
         [postRegister.pending]: (state, action) => {
@@ -48,4 +53,4 @@ export const register = createSlice({
     }
 });
 
-export let {} = register.actions;
+export let { setSuccess } = register.actions;

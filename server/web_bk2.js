@@ -15,8 +15,9 @@ const session = require('express-session');
 // const FileStore = require('session-file-store')(session);
 var MySQLStore = require('express-mysql-session')(session);
 var sessionStore = new MySQLStore({}, mysql);
-
 const app = express();
+var jwt = require('jsonwebtoken');
+const { auth } = require('./middleware/authMiddleware');
 
 app.use(bodyParser.json());
 app.use(
@@ -26,7 +27,6 @@ app.use(
 );
 app.use(cors());
 app.use(cookieParser());
-const oneDay = 1000 * 60 * 60 * 24;
 
 app.use(
   session({
@@ -35,13 +35,13 @@ app.use(
     resave: false,
     saveUninitialized: true,
     store: sessionStore,
-    cookie: { maxAge: oneDay },
+    // store: new FileStore(),
   })
 );
 
 const PORT = process.env.PORT || 8080;
 const saltRounds = 10;
-
+const jwtSecret = process.env.ACCESS_TOKEN_SECRET;
 app.get('/test', (req, res) => {
   console.log(req.session); // session 생긴다!
   res.send('session');
@@ -237,21 +237,22 @@ app.post('/api/login', async (req, res) => {
       const user = emailResult[0][0];
       const compare = bcrypt.compareSync(password, user.passwd);
       if (compare) {
-        req.session.uid = user.id;
-        req.session.author_email = user.email;
-        req.session.author_name = user.name;
-        req.session.isLoggedIn = true;
-        req.session.save(function (err) {
-          if (err) res.send(err);
-          res.send({
+        const uId = user.id;
+        const uEmail = user.email;
+        const userToken = jwt.sign({ uId, uEmail }, jwtSecret, {
+          expiresIn: 60 * 60, //60초 * 60 이므로, 1시간 유효한 토큰 발급
+        });
+
+        res
+          .cookie('user', userToken, {
+            httpOnly: true,
+          })
+          .send({
             success: true,
             message: '로그인 성공!',
             code: 0,
+            token: userToken,
           });
-        });
-        console.log(req.session);
-
-        // res.end('done');
       } else {
         res.send({
           success: false,
@@ -279,17 +280,12 @@ app.post('/api/login', async (req, res) => {
     });
   }
 });
-// app.get('/signin/ok', function (req, res) {
-//   res.send({ result: req.session });
-// });
-app.get('/logincheck', async (req, res) => {
-  // let result = ({ uid, author_email, author_name, isLoggedIn } = req.session);
-  // if (req.session.isLoggedIn) {
-  //   res.send({ isLoggedIn: true, uid: result.uid, author_name: result.author_name });
-  // } else {
-  //   res.send({ isLoggedIn: false });
-  // }
-  console.log(req.session);
+app.get('/signin/ok', function (req, res) {
+  res.send({ result: req.session });
+});
+app.get('/logincheck', auth, async (req, res) => {
+  console.log('dddddd');
+  res.send(req.decoded);
 });
 
 app.listen(PORT, () => console.log(`Server Start Listening on port ${PORT}`));

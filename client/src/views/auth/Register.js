@@ -6,7 +6,7 @@ import MainCard from 'ui-component/cards/MainCard';
 import { Box, Grid } from '@mui/material';
 
 // import UserTable from '../../components/UserTable';
-import RegisterTable from '../../components/RegisterTable';
+import RegisterForm from '../../components/RegisterForm';
 
 // ==============================|| SAMPLE PAGE ||============================== //
 
@@ -33,7 +33,7 @@ const Register = () => (
             }}
         >
             <Box sx={{ p: { xs: 2, sm: 3, xl: 5 } }}>
-                <RegisterTable />
+                <RegisterForm />
             </Box>
         </MainCard>
     </Grid>
