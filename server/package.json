@@ -5,7 +5,7 @@
   "main": "web.js",
   "scripts": {
     "start": "node index.js",
-    "server": "nodemon server.js",
+    "server": "node web.js",
     "client": "npm start --prefix ../client/",
     "dev": "concurrently \"npm run server\"  \"npm run client\""
   },
@@ -21,7 +21,6 @@
     "cors": "^2.8.5",
     "dotenv": "^16.0.1",
     "express": "^4.18.1",
-    "express-mysql-session": "^2.1.8",
     "express-session": "^1.17.3",
     "jsonwebtoken": "^8.5.1",
     "mysql": "^2.18.1",

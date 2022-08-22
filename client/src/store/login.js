@@ -4,7 +4,7 @@ import { createAsyncThunk, createSlice, current } from '@reduxjs/toolkit';
 export const postLogin = createAsyncThunk('POST_LOGIN', async (payload, { getState, rejectWithValue }) => {
     let { result } = payload;
     try {
-        const response = await axios.post('http://localhost:8080/api/login', result);
+        const response = await axios.post('http://localhost:8080/api/login', result, { withCredentials: true });
         if (response.data.success) {
             alert(response.data.message);
             return true;
