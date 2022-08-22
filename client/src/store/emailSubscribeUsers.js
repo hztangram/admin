@@ -19,6 +19,7 @@ export const getUsers = createAsyncThunk('GET_USERS', async (payload, { getState
                     created: user.created.slice(0, -5),
                     modified: user.modified.slice(0, -5),
                     edit: false,
+                    checked: false,
                     verified: true,
                     isUpdate: false
                 };
@@ -105,13 +106,15 @@ export const deleteUsers = createAsyncThunk('DELETE_USERS', async (payload, { ge
 export const emailSubscribeUsers = createSlice({
     name: 'users',
     initialState: {
-        users: [],
-        modefiedUsers: [],
-        batchMode: false,
-        saveMode: false,
-        editMode: false,
-        refresh: false,
-        checkAll: false,
+        users: [], //첫 로드시 불러오는 유저 데이터
+        modefiedUsers: [], //개별수정시 수정 될 데이터
+        batchMode: false, //일괄수정모드(체크박스 활성화 여부)
+        saveMode: false, //SAVE 버튼 활성화 여부
+        editMode: false, // 몰라
+        modefiedIds: [], //일괄수정시 수정 될 데이터
+        refresh: false, //SAVE후 화면 새로고침 (DB에서 유저정보 다시 불러옴)
+        checkedAll: false, //전체선택
+        //PAGING
         currentPage: 0,
         pageSize: 20,
         total: null
@@ -131,6 +134,7 @@ export const emailSubscribeUsers = createSlice({
             let _edit = _users[idx].edit;
             _users[idx].edit = !_edit;
 
+            //엑스 누르면 인풋 초기화 -> 저장 X
             if (_edit === true) {
                 _users[idx].isUpdate = false;
             }
@@ -139,33 +143,46 @@ export const emailSubscribeUsers = createSlice({
             leng <= 0 && (state.saveMode = false);
         },
         toggleCheck(state, { payload }) {
-            let _id = payload.id;
-            let _checked = payload.checked;
+            let id = payload.id;
+            let checked = payload.checked;
             let _users = state.users;
-            let _state = state;
-            _users.map((user) => (user.edit = false));
+            let _modefiedIds = state.modefiedIds;
+            let checkedAll = state.checkedAll;
 
-            // let updateArr = [];
-            // _users.map((el) => {
-            //     return el.isUpdate && updateArr.push(el.id);
-            // });
-            // updateArr.length > 0 ? (_state.saveMode = true) : (_state.saveMode = false);
-        },
-        toggleAll(state, { payload }) {
-            let _users = state.users;
-            let isChecked = payload;
-            _users.map((user) => {
-                if (isChecked) {
-                    user.edit = true;
-                    state.checkAll = true;
-                    state.editMode = true;
-                } else {
-                    user.edit = false;
-                    state.checkAll = false;
-                    state.editMode = false;
-                    state.saveMode = false;
-                }
+            let idx = _users.findIndex((user) => {
+                return user.id === id;
             });
+
+            if (checked) {
+                _modefiedIds.push(id);
+                _users[idx].checked = true;
+            } else {
+                const i = _modefiedIds.findIndex((el) => el === id);
+                if (i > -1) _modefiedIds.splice(i, 1);
+                _users[idx].checked = false;
+            }
+            // let leng = _users.filter((user) => {
+            //     user.checked = true;
+            // });
+            console.log(current(state.modefiedIds));
+        },
+        checkAll(state, { payload }) {
+            let _users = state.users;
+            let checkedAll = state.checkedAll;
+            state.modefiedIds = [];
+            let _modefiedIds = state.modefiedIds;
+            if (!checkedAll) {
+                _users.map((user) => {
+                    _modefiedIds.push(user.id);
+                    user.checked = true;
+                });
+            } else {
+                _users.map((user) => {
+                    _modefiedIds = [];
+                    user.checked = false;
+                });
+            }
+            state.checkedAll = !checkedAll; //toggle
         },
         setSaveMode(state, { payload }) {
             // EDIT 모드에서 인풋 한가지라도 바뀌면 user마다 isUpdate = true
@@ -230,7 +247,7 @@ export const emailSubscribeUsers = createSlice({
             let _modefiedId = state.modefiedId;
             const setInit = () => {
                 _state.saveMode = false;
-                _state.checkAll = false;
+                // _state.checkAll = false;
                 _state.refresh = true;
                 _modefiedId: [];
                 _users.map((i) => {
@@ -247,24 +264,9 @@ export const emailSubscribeUsers = createSlice({
     },
 
     extraReducers: {
-        [getUsers.pending]: (state, action) => {
-            console.log('pending');
-        },
         [getUsers.fulfilled]: (state, { payload }) => {
             state.users = payload.users;
             state.total = payload.total;
-        },
-        [getUsers.rejected]: (state, action) => {
-            console.log('rejected' + action.payload);
-        },
-        [updateUsers.pending]: (state, action) => {
-            console.log('pending');
-        },
-        [updateUsers.fulfilled]: (state, { payload }) => {
-            console.log('pending');
-        },
-        [updateUsers.rejected]: (state, action) => {
-            console.log('rejected' + action.payload);
         }
     }
 });
@@ -276,9 +278,10 @@ export let {
     verifyEmail,
     setRefresh,
     resetRow,
-    toggleAll,
+    checkAll,
     selectUpdate,
     toggleCheck,
     setSaveMode,
-    setBatch
+    setBatch,
+    checkedAll
 } = emailSubscribeUsers.actions;

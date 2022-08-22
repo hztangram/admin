@@ -1,10 +1,11 @@
 import axios from 'axios';
+axios.defaults.withCredentials = true;
 import { createAsyncThunk, createSlice, current } from '@reduxjs/toolkit';
 
 export const postLogin = createAsyncThunk('POST_LOGIN', async (payload, { getState, rejectWithValue }) => {
     let { result } = payload;
     try {
-        const response = await axios.post('http://localhost:8080/api/login', result, { withCredentials: true });
+        const response = await axios.post('http://localhost:8080/api/login', result);
         if (response.data.success) {
             alert(response.data.message);
             return true;
@@ -32,14 +33,8 @@ export const login = createSlice({
     reducers: {},
 
     extraReducers: {
-        [postLogin.pending]: (state, action) => {
-            console.log('pending');
-        },
         [postLogin.fulfilled]: (state, { payload }) => {
             state.success = true;
-        },
-        [postLogin.rejected]: (state, action) => {
-            console.log('rejected' + action.payload);
         }
     }
 });

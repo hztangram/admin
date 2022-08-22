@@ -22,8 +22,12 @@ app.use(
     extended: false,
   })
 )
+// const corsOptions = {
+//   origin: true,
+//   credentials: true,
+// }
 const corsOptions = {
-  origin: true,
+  origin: "http://localhost:3000",
   credentials: true,
 }
 app.use(cors(corsOptions))
@@ -43,7 +47,7 @@ app.use(
     secret: process.env.SECRET,
     resave: false,
     saveUninitialized: true,
-    cookie: { sameSite: "none", maxAge: 24000 * 60 * 60, secure: true },
+    cookie: { maxAge: 24000 * 60 * 60 },
   })
 )
 
@@ -54,7 +58,6 @@ app.post("/get/users/emailSubscribers", async (req, res) => {
   let result = []
   let total = null
   const { currentPage, pageSize } = req.body
-  console.log(currentPage)
   try {
     const emailSubscribersSql = `
       SELECT *
@@ -239,7 +242,6 @@ app.post("/api/login", async (req, res) => {
     if (emailResult[0].length > 0) {
       const user = emailResult[0][0]
       const compare = bcrypt.compareSync(password, user.passwd)
-      console.log(req.session)
       if (compare) {
         req.session.uid = user.id
         req.session.author_email = user.email
@@ -252,7 +254,6 @@ app.post("/api/login", async (req, res) => {
             message: "로그인 성공!",
             code: 0,
           })
-          console.log(req.session)
         })
       } else {
         res.send({
@@ -283,20 +284,13 @@ app.post("/api/login", async (req, res) => {
 })
 
 app.post("/api/checklogin", async (req, res) => {
-  const result = req.session.isLoggedIn
   if (req.session.isLoggedIn) {
-    res.send({ isLoggedIn: result })
+    res.send({ isLoggedIn: true })
   } else {
-    res.send({ success: false })
-  }
-  console.log(req.session)
-})
-app.post("/api/checklogin2", async (req, res) => {
-  const result = true
-  if (req.session.isLoggedIn) {
-    res.send({ isLoggedIn: result })
+    res.send({ isLoggedIn: false })
   }
 })
+
 app.listen(PORT, () => console.log(`Server Start Listening on port ${PORT}`))
 
 // app.get("/get/users/emailSubscribers", async (req, res) => {

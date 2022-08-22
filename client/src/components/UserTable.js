@@ -28,7 +28,7 @@ import {
     verifyEmail,
     setRefresh,
     deleteUsers,
-    toggleAll,
+    checkAll,
     selectUpdate,
     toggleCheck,
     setSaveMode,
@@ -49,9 +49,6 @@ export default function BasicTable() {
     const dispatch = useDispatch();
     const refresh = useSelector((state) => state.emailSubscribeUsers.refresh);
     const users = useSelector((state) => state.emailSubscribeUsers.users);
-
-    const checkAll = useSelector((state) => state.emailSubscribeUsers.checkAll);
-
     const saveMode = useSelector((state) => state.emailSubscribeUsers.saveMode);
     const currentPage = useSelector((state) => state.emailSubscribeUsers.currentPage);
     const pageSize = useSelector((state) => state.emailSubscribeUsers.pageSize);
@@ -59,11 +56,16 @@ export default function BasicTable() {
     const count = Math.floor(total / pageSize) + 1;
     const editMode = useSelector((state) => state.emailSubscribeUsers.editMode);
     const batchMode = useSelector((state) => state.emailSubscribeUsers.batchMode);
+    const checkedAll = useSelector((state) => state.emailSubscribeUsers.checkedAll);
 
     useEffect(() => {
         dispatch(getUsers({}));
         refresh && dispatch(setRefresh());
     }, [refresh]);
+
+    useEffect(() => {
+        dispatch(cleanData());
+    }, [batchMode]);
 
     const deleteHandler = () => {
         let deleteArr = [];
@@ -190,22 +192,37 @@ export default function BasicTable() {
             <TableContainer component={Paper}>
                 <Table sx={{ minWidth: 650 }} stickyHeader className="fixed-table">
                     <colgroup>
-                        <col style={{ width: '5%' }} />
-                        <col style={{ width: '5%' }} />
-                        <col style={{ width: '14%' }} />
-                        <col style={{ width: '14%' }} />
-                        <col style={{ width: '14%' }} />
-                        <col style={{ width: '14%' }} />
-                        <col style={{ width: '14%' }} />
-                        <col style={{ width: '14%' }} />
-                        <col style={{ width: '56%' }} />
+                        {batchMode ? (
+                            <>
+                                <col style={{ width: '1%' }} />
+                                <col style={{ width: '5%' }} />
+                                <col style={{ width: '16%' }} />
+                                <col style={{ width: '16%' }} />
+                                <col style={{ width: '15%' }} />
+                                <col style={{ width: '15%' }} />
+                                <col style={{ width: '16%' }} />
+                                <col style={{ width: '16%' }} />
+                            </>
+                        ) : (
+                            <>
+                                <col style={{ width: '5%' }} />
+                                <col style={{ width: '16%' }} />
+                                <col style={{ width: '16%' }} />
+                                <col style={{ width: '15%' }} />
+                                <col style={{ width: '15%' }} />
+                                <col style={{ width: '16%' }} />
+                                <col style={{ width: '16%' }} />
+                                <col style={{ width: '1%' }} />
+                            </>
+                        )}
                     </colgroup>
                     <TableHead>
                         <TableRow>
-                            <TableCell padding="checkbox">
-                                {/* <Checkbox color="primary" checked={checkHandler} /> */}
-                                <Checkbox color="primary" checked={checkAll} />
-                            </TableCell>
+                            {batchMode && (
+                                <TableCell padding="checkbox">
+                                    <Checkbox color="primary" onClick={() => dispatch(checkAll())} checked={checkedAll} />
+                                </TableCell>
+                            )}
                             <TableCell align="left">ID</TableCell>
                             <TableCell align="left">Email</TableCell>
                             <TableCell align="left">Page</TableCell>
@@ -213,7 +230,7 @@ export default function BasicTable() {
                             <TableCell align="left">Ad Agree</TableCell>
                             <TableCell align="left">Created Date</TableCell>
                             <TableCell align="left">Modified Date</TableCell>
-                            <TableCell align="center">Edit</TableCell>
+                            {!batchMode && <TableCell align="center">Edit</TableCell>}
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -228,13 +245,6 @@ export default function BasicTable() {
                                         data-edit={user.edit}
                                         data-update={user.isUpdate}
                                     >
-                                        <TableCell padding="checkbox">
-                                            <Checkbox
-                                                color="primary"
-                                                name="checkbox"
-                                                onChange={(e) => dispatch(toggleCheck({ id: user.id, checked: e.target.checked }))}
-                                            />
-                                        </TableCell>
                                         <TableCell component="th" scope="row">
                                             {user.id}
                                         </TableCell>
@@ -322,13 +332,16 @@ export default function BasicTable() {
                                         data-update={user.isUpdate}
                                         name="row"
                                     >
-                                        <TableCell padding="checkbox">
-                                            <Checkbox
-                                                color="primary"
-                                                name="checkbox"
-                                                onChange={(e) => dispatch(toggleCheck({ id: user.id, checked: e.target.checked }))}
-                                            />
-                                        </TableCell>
+                                        {batchMode && (
+                                            <TableCell padding="checkbox">
+                                                <Checkbox
+                                                    color="primary"
+                                                    name="checkbox"
+                                                    onChange={(e) => dispatch(toggleCheck({ id: user.id, checked: e.target.checked }))}
+                                                    checked={user.checked}
+                                                />
+                                            </TableCell>
+                                        )}
                                         <TableCell component="th" scope="row">
                                             {user.id}
                                         </TableCell>
@@ -356,11 +369,13 @@ export default function BasicTable() {
                                         </TableCell>
                                         <TableCell align="left">{user.created}</TableCell>
                                         <TableCell align="left">{user.modified}</TableCell>
-                                        <TableCell align="center">
-                                            <Button onClick={() => dispatch(toggleEdit(user.id))}>
-                                                <EditIcon color="primary" />
-                                            </Button>
-                                        </TableCell>
+                                        {!batchMode && (
+                                            <TableCell align="center">
+                                                <Button onClick={() => dispatch(toggleEdit(user.id))}>
+                                                    <EditIcon color="primary" />
+                                                </Button>
+                                            </TableCell>
+                                        )}
                                     </TableRow>
                                 )
                             )}
