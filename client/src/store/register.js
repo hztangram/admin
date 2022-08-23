@@ -10,7 +10,7 @@ export const postRegister = createAsyncThunk('POST_REGISTER', async (payload, { 
         password: password
     };
     try {
-        const response = await axios.post('http://localhost:8080/register', userForm);
+        const response = await axios.post('http://localhost:8080/api/tgAdmin/register', userForm);
         if (response.data.success) {
             alert('회원가입이 완료되었습니다.');
             return true;

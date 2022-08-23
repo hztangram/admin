@@ -22,10 +22,6 @@ app.use(
     extended: false,
   })
 )
-// const corsOptions = {
-//   origin: true,
-//   credentials: true,
-// }
 const corsOptions = {
   origin: "http://localhost:3000",
   credentials: true,
@@ -54,7 +50,7 @@ app.use(
 const PORT = process.env.PORT || 8080
 const saltRounds = 10
 
-app.post("/get/users/emailSubscribers", async (req, res) => {
+app.post("/api/tgAdmin/get/emailSubscribers", async (req, res) => {
   let result = []
   let total = null
   const { currentPage, pageSize } = req.body
@@ -91,7 +87,7 @@ app.post("/get/users/emailSubscribers", async (req, res) => {
   }
 })
 
-app.post("/update/users/emailSubscribers", async (req, res) => {
+app.post("/api/tgAdmin/update/emailSubscribers", async (req, res) => {
   var arr = req.body
   var errorArr = []
   let connection
@@ -150,7 +146,7 @@ app.post("/update/users/emailSubscribers", async (req, res) => {
   }
 })
 
-app.post("/delete/users/emailSubscribers", async (req, res) => {
+app.post("/api/tgAdmin/delete/emailSubscribers", async (req, res) => {
   var arr = req.body
   let connection
   try {
@@ -182,7 +178,7 @@ app.post("/delete/users/emailSubscribers", async (req, res) => {
   }
 })
 
-app.post("/register", async (req, res) => {
+app.post("/api/tgAdmin/register", async (req, res) => {
   let { name, email, password } = req.body
   let connection
   try {
@@ -226,7 +222,7 @@ app.post("/register", async (req, res) => {
   }
 })
 
-app.post("/api/login", async (req, res) => {
+app.post("/api/tgAdmin/login", async (req, res) => {
   let { email, password } = req.body
   let connection
   try {
@@ -283,117 +279,13 @@ app.post("/api/login", async (req, res) => {
   }
 })
 
-app.post("/api/checklogin", async (req, res) => {
+app.post("/api/tgAdmin/checklogin", async (req, res) => {
+  console.log(req.session)
   if (req.session.isLoggedIn) {
-    res.send({ isLoggedIn: true })
+    res.send({ isLoggedIn: true, userName: req.session.author_name })
   } else {
     res.send({ isLoggedIn: false })
   }
 })
 
 app.listen(PORT, () => console.log(`Server Start Listening on port ${PORT}`))
-
-// app.get("/get/users/emailSubscribers", async (req, res) => {
-//   let result = []
-//   try {
-//     const emailSubscribersSql = "SELECT * FROM homepage_subscribers"
-
-//     const emailSubscribersSqlResult = await mysql.query(emailSubscribersSql)
-
-//     if (emailSubscribersSqlResult.length > 0) {
-//       result = emailSubscribersSqlResult[0]
-//     }
-//     res.status(200).send({
-//       success: true,
-//       users: result,
-//     })
-//   } catch (err) {
-//     console.error("emailSubscribers GET Error / " + err.message)
-//     res.status(500).send("message : Internal Server Error")
-//   }
-// })
-
-// app.get("/get/users/emailSubscribers", (req, res) => {
-//   const sql = "SELECT * FROM homepage_subscribers"
-//   try {
-//     mysql.getConnection((err, connection) => {
-//       // Connection 연결
-//       console.log("emailSubscribers GET")
-//       if (err) throw err
-//       connection.query(sql, (err, result, fields) => {
-//         // Query문 전송
-//         if (err) {
-//           console.error("emailSubscribers GET Error / " + err)
-//           res.status(500).send("message : Internal Server Error")
-//         } else {
-//           if (result.length === 0) {
-//             res.status(400).send({
-//               success: false,
-//               message: "DB response Not Found",
-//             })
-//           } else {
-//             res.status(200).send({
-//               success: true,
-//               users: result,
-//             })
-//           }
-//         }
-//       })
-//       connection.release() // Connectino Pool 반환
-//     })
-//   } catch (err) {
-//     console.error("emailSubscribers GET Error / " + err)
-//     res.status(500).send("message : Internal Server Error")
-//   }
-// })
-
-// app.post("/update/users/emailSubscribers", async (req, res) => {
-//   var arr = req.body
-//   var sql
-//   var params
-//   var errorArr = []
-//   let index = 0
-//   try {
-//     for (let i = 0; i < arr.length + 1; i++) {
-//       sql = "select count(1) as dupleCnt from homepage_subscribers where email = ? and id <> ?"
-//       params = [arr[i].email, arr[i].id]
-//       mysql.query(sql, params, function (err, result) {
-//         if (err) throw err
-//         if (result.length > 0) {
-//           if (result[0].dupleCnt === 0) {
-//             // throw { message: item.id }
-//             const sql = "UPDATE homepage_subscribers SET email = ? , modified = CURRENT_TIMESTAMP WHERE id = ?"
-//             params = [arr[i].email, arr[i].id]
-//             mysql.query(sql, params, function (err, result) {
-//               if (err) throw err
-//             })
-//           } else {
-//             errorArr.push(arr[i].id)
-//           }
-//         }
-//         console.log(result.length)
-//       })
-
-//       if (arr.length === i) {
-//         console.log(O)
-//         if (errorArr.length > 0) {
-//           res.send({
-//             success: false,
-//             message: "이메일 중복",
-//             dupleCnt: errorArr,
-//           })
-//         } else {
-//           res.send({
-//             success: true,
-//             message: "OK",
-//           })
-//         }
-//       }
-//     }
-//   } catch (err) {
-//     res.send({
-//       success: false,
-//       err: err.message,
-//     })
-//   }
-// })

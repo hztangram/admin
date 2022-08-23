@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -18,11 +18,11 @@ import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
 import Box from '@mui/material/Box';
+import Input from '@mui/material/Input';
 
 import {
     getUsers,
     toggleEdit,
-    setData,
     updateUsers,
     cleanData,
     verifyEmail,
@@ -54,12 +54,12 @@ export default function BasicTable() {
     const pageSize = useSelector((state) => state.emailSubscribeUsers.pageSize);
     const total = useSelector((state) => state.emailSubscribeUsers.total);
     const count = Math.floor(total / pageSize) + 1;
-    const editMode = useSelector((state) => state.emailSubscribeUsers.editMode);
     const batchMode = useSelector((state) => state.emailSubscribeUsers.batchMode);
     const checkedAll = useSelector((state) => state.emailSubscribeUsers.checkedAll);
 
     useEffect(() => {
-        dispatch(getUsers({}));
+        const page = document.querySelector('[aria-current="true"]').innerText;
+        dispatch(getUsers({ currentPage: pageSize * (page - 1) }));
         refresh && dispatch(setRefresh());
     }, [refresh]);
 
@@ -69,7 +69,7 @@ export default function BasicTable() {
 
     const deleteHandler = () => {
         let deleteArr = [];
-        users.map((a) => a.edit && deleteArr.push(Number(a.id)));
+        users.map((a) => a.checked && deleteArr.push(Number(a.id)));
         dispatch(deleteUsers({ deleteArr })).then((res) => {
             if (res.payload.status === 200 && res.payload.data.success) {
                 dispatch(cleanData());
@@ -77,6 +77,7 @@ export default function BasicTable() {
         });
     };
     const updateHandler = () => {
+        //개별수정모드
         let rowArr = Array.from(document.querySelectorAll('[data-update="true"]'));
         let resultData = rowArr.map((data) => {
             let id = Number(data.getAttribute('data-key'));
@@ -85,6 +86,7 @@ export default function BasicTable() {
             let lang = data.querySelector('[name="lang"]').value;
             let adAgree = Number(data.querySelector('[name="adAgree"]').value);
             let deleted = Number(data.querySelector('[name="deleted"]').value);
+
             return {
                 id: id,
                 email: email,
@@ -101,14 +103,12 @@ export default function BasicTable() {
             let id = row.getAttribute('data-key');
             var reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
             reg.test(value) === false && invalidEamil.push(id);
-            invalidEamil.push(id);
         });
 
         if (invalidEamil.length > 0) {
             dispatch(verifyEmail({ invalidEamil }));
         } else if (saveMode && invalidEamil.length <= 0) {
-            dispatch(setData({ resultData }));
-            dispatch(updateUsers())
+            dispatch(updateUsers({ resultData }))
                 .then((res) => {
                     if (res.payload.status === 200 && res.payload.data.success) {
                         dispatch(cleanData());
@@ -118,6 +118,35 @@ export default function BasicTable() {
                     console.error(error);
                 });
         }
+    };
+    const updateBatchHandler = () => {
+        let rowArr = Array.from(document.querySelectorAll('[data-update="true"]'));
+
+        let resultData = rowArr.map((data) => {
+            let id = Number(data.getAttribute('data-key'));
+            let email = data.querySelector('[name="email"]').value;
+            let page = document.querySelector('[name="batchPage"]').value;
+            let lang = document.querySelector('[name="batchLang"]').value;
+            let adAgree = Number(document.querySelector('[name="batchAdAgree"]').value);
+            let deleted = Number(data.querySelector('[name="deleted"]').value);
+            return {
+                id: id,
+                email: email,
+                page: page,
+                lang: lang,
+                adAgree: adAgree,
+                deleted: deleted
+            };
+        });
+        dispatch(updateUsers({ resultData }))
+            .then((res) => {
+                if (res.payload.status === 200 && res.payload.data.success) {
+                    dispatch(cleanData());
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+            });
     };
 
     //checkbox
@@ -140,7 +169,7 @@ export default function BasicTable() {
             <Box
                 sx={{
                     display: 'flex',
-                    alignItems: 'center',
+                    alignItems: 'flex-start',
                     justifyContent: 'space-between',
 
                     height: '42px'
@@ -157,9 +186,9 @@ export default function BasicTable() {
                 <Box>
                     {batchMode && (
                         <>
-                            <FormControl sx={{ mr: 2, minWidth: 170 }} size="small" disabled={!editMode}>
+                            <FormControl sx={{ mr: 2, minWidth: 170 }} size="small" disabled={!saveMode}>
                                 <InputLabel>Page</InputLabel>
-                                <Select label="Page" defaultValue="main" onChange={() => dispatch(selectUpdate())}>
+                                <Select label="Page" defaultValue="main" name="batchPage">
                                     <MenuItem value="main">TANGRAM Main</MenuItem>
                                     <MenuItem value="smartrope">SmartRope LED</MenuItem>
                                     <MenuItem value="smartroperookie">SmartRope ROOKIE</MenuItem>
@@ -167,9 +196,9 @@ export default function BasicTable() {
                                     <MenuItem value="shop">TANGRAM SHOP</MenuItem>
                                 </Select>
                             </FormControl>
-                            <FormControl sx={{ mr: 2, minWidth: 170 }} size="small" disabled={!editMode}>
+                            <FormControl sx={{ mr: 2, minWidth: 170 }} size="small" disabled={!saveMode}>
                                 <InputLabel>Language</InputLabel>
-                                <Select label="Language" defaultValue="kr">
+                                <Select label="Language" defaultValue="kr" name="batchLang">
                                     <MenuItem value="kr">KR</MenuItem>
                                     <MenuItem value="en">EN</MenuItem>
                                     <MenuItem value="jp">JP</MenuItem>
@@ -178,12 +207,31 @@ export default function BasicTable() {
                                     <MenuItem value="fr">FR</MenuItem>
                                 </Select>
                             </FormControl>
-                            <Button variant="outlined" startIcon={<DeleteIcon />} sx={{ mr: 2 }} color="error" disabled={!editMode}>
+                            <FormControl sx={{ mr: 2, minWidth: 170 }} size="small" disabled={!saveMode}>
+                                <InputLabel>Ad Agree </InputLabel>
+                                <Select label="Ad Agree" defaultValue="1" name="batchAdAgree">
+                                    <MenuItem value="1">Agree</MenuItem>
+                                    <MenuItem value="0">Disagree</MenuItem>
+                                </Select>
+                            </FormControl>
+                            <Button
+                                variant="outlined"
+                                startIcon={<DeleteIcon />}
+                                sx={{ mr: 2 }}
+                                color="error"
+                                disabled={!saveMode}
+                                onClick={deleteHandler}
+                            >
                                 Delete
                             </Button>
                         </>
                     )}
-                    <Button variant="contained" endIcon={<SendIcon />} disabled={!saveMode}>
+                    <Button
+                        variant="contained"
+                        endIcon={<SendIcon />}
+                        disabled={!saveMode}
+                        onClick={batchMode ? updateBatchHandler : updateHandler}
+                    >
                         Save
                     </Button>
                 </Box>
@@ -249,71 +297,70 @@ export default function BasicTable() {
                                             {user.id}
                                         </TableCell>
                                         <TableCell align="left">
-                                            <FormControl fullWidth>
-                                                <TextField
-                                                    error={user.verified ? false : true}
-                                                    defaultValue={user.email}
-                                                    helperText={!user.verified && '이메일을 올바른 형식으로 작성해주세요.'}
-                                                    variant="standard"
-                                                    name="email"
-                                                    onChange={() => dispatch(setSaveMode(user.id))}
-                                                />
-                                            </FormControl>
+                                            <TextField
+                                                fullWidth
+                                                error={user.verified ? false : true}
+                                                defaultValue={user.email}
+                                                helperText={!user.verified && '이메일을 올바른 형식으로 작성해주세요.'}
+                                                variant="standard"
+                                                name="email"
+                                                onChange={() => dispatch(setSaveMode(user.id))}
+                                            />
                                         </TableCell>
                                         <TableCell align="left">
-                                            <FormControl variant="standard" fullWidth>
-                                                <Select
-                                                    defaultValue={user.page}
-                                                    name="page"
-                                                    onChange={() => dispatch(setSaveMode(user.id))}
-                                                >
-                                                    <MenuItem value="main">TANGRAM Main</MenuItem>
-                                                    <MenuItem value="smartrope">SmartRope LED</MenuItem>
-                                                    <MenuItem value="smartroperookie">SmartRope ROOKIE</MenuItem>
-                                                    <MenuItem value="smartropepure">SmartRope PURE</MenuItem>
-                                                    <MenuItem value="shop">TANGRAM SHOP</MenuItem>
-                                                </Select>
-                                            </FormControl>
+                                            <Select
+                                                fullWidth
+                                                variant="standard"
+                                                defaultValue={user.page}
+                                                name="page"
+                                                onChange={() => dispatch(setSaveMode(user.id))}
+                                            >
+                                                <MenuItem value="main">TANGRAM Main</MenuItem>
+                                                <MenuItem value="smartrope">SmartRope LED</MenuItem>
+                                                <MenuItem value="smartroperookie">SmartRope ROOKIE</MenuItem>
+                                                <MenuItem value="smartropepure">SmartRope PURE</MenuItem>
+                                                <MenuItem value="shop">TANGRAM SHOP</MenuItem>
+                                            </Select>
                                         </TableCell>
                                         <TableCell align="left">
-                                            <FormControl variant="standard" fullWidth>
-                                                <Select
-                                                    defaultValue={user.lang}
-                                                    name="lang"
-                                                    onChange={() => dispatch(setSaveMode(user.id))}
-                                                >
-                                                    <MenuItem value="kr">KR</MenuItem>
-                                                    <MenuItem value="en">EN</MenuItem>
-                                                    <MenuItem value="jp">JP</MenuItem>
-                                                    <MenuItem value="cn">CN</MenuItem>
-                                                    <MenuItem value="de">DE</MenuItem>
-                                                    <MenuItem value="fr">FR</MenuItem>
-                                                </Select>
-                                            </FormControl>
+                                            <Select
+                                                variant="standard"
+                                                fullWidth
+                                                defaultValue={user.lang}
+                                                name="lang"
+                                                onChange={() => dispatch(setSaveMode(user.id))}
+                                            >
+                                                <MenuItem value="kr">KR</MenuItem>
+                                                <MenuItem value="en">EN</MenuItem>
+                                                <MenuItem value="jp">JP</MenuItem>
+                                                <MenuItem value="cn">CN</MenuItem>
+                                                <MenuItem value="de">DE</MenuItem>
+                                                <MenuItem value="fr">FR</MenuItem>
+                                            </Select>
                                         </TableCell>
                                         <TableCell align="left">
-                                            <FormControl variant="standard" fullWidth>
-                                                <Select
-                                                    defaultValue={user.adAgree}
-                                                    name="adAgree"
-                                                    onChange={() => dispatch(setSaveMode(user.id))}
-                                                >
-                                                    <MenuItem value="1">Agree</MenuItem>
-                                                    <MenuItem value="0">Disagree</MenuItem>
-                                                </Select>
-                                            </FormControl>
+                                            <Select
+                                                variant="standard"
+                                                fullWidth
+                                                defaultValue={user.adAgree}
+                                                name="adAgree"
+                                                onChange={() => dispatch(setSaveMode(user.id))}
+                                            >
+                                                <MenuItem value="1">Agree</MenuItem>
+                                                <MenuItem value="0">Disagree</MenuItem>
+                                            </Select>
                                         </TableCell>
                                         <TableCell align="left" className="hidden">
-                                            <FormControl variant="standard" fullWidth hidden>
-                                                <Select
-                                                    defaultValue={user.deleted}
-                                                    name="deleted"
-                                                    onChange={() => dispatch(setSaveMode(user.id))}
-                                                >
-                                                    <MenuItem value="1">undeleted</MenuItem>
-                                                    <MenuItem value="0">deleted</MenuItem>
-                                                </Select>
-                                            </FormControl>
+                                            <Select
+                                                variant="standard"
+                                                fullWidth
+                                                defaultValue={user.deleted}
+                                                name="deleted"
+                                                onChange={() => dispatch(setSaveMode(user.id))}
+                                            >
+                                                <MenuItem value="1">undeleted</MenuItem>
+                                                <MenuItem value="0">deleted</MenuItem>
+                                            </Select>
                                         </TableCell>
                                         <TableCell align="left">{user.created}</TableCell>
                                         <TableCell align="left">{user.modified}</TableCell>
@@ -328,9 +375,9 @@ export default function BasicTable() {
                                         key={user.id}
                                         data-key={user.id}
                                         sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                        name="row"
                                         data-edit={user.edit}
                                         data-update={user.isUpdate}
-                                        name="row"
                                     >
                                         {batchMode && (
                                             <TableCell padding="checkbox">
@@ -345,27 +392,46 @@ export default function BasicTable() {
                                         <TableCell component="th" scope="row">
                                             {user.id}
                                         </TableCell>
-                                        <TableCell align="left">{user.email}</TableCell>
                                         <TableCell align="left">
-                                            {(user.page === 'main' && _main) ||
-                                                (user.page === 'smartrope' && _smartrope) ||
-                                                (user.page === 'smartroperookie' && _smartroperookie) ||
-                                                (user.page === 'smartropepure' && _smartropepure) ||
-                                                (user.page === 'shop' && _shop)}
+                                            <input value={user.email} name="email" className="customInput" disabled />
                                         </TableCell>
                                         <TableCell align="left">
-                                            {(user.lang === 'kr' && _kr) ||
-                                                (user.lang === 'en' && _en) ||
-                                                (user.lang === 'jp' && _jp) ||
-                                                (user.lang === 'cn' && _cn) ||
-                                                (user.lang === 'de' && _de) ||
-                                                (user.lang === 'fr' && _fr)}
+                                            <input
+                                                value={
+                                                    (user.page === 'main' && _main) ||
+                                                    (user.page === 'smartrope' && _smartrope) ||
+                                                    (user.page === 'smartroperookie' && _smartroperookie) ||
+                                                    (user.page === 'smartropepure' && _smartropepure) ||
+                                                    (user.page === 'shop' && _shop)
+                                                }
+                                                name="page"
+                                                className="customInput"
+                                                disabled
+                                            />
                                         </TableCell>
                                         <TableCell align="left">
-                                            {(user.adAgree === 1 && 'Agree') || (user.adAgree === 0 && 'Disagree')}
+                                            <input
+                                                value={
+                                                    (user.lang === 'kr' && _kr) ||
+                                                    (user.lang === 'en' && _en) ||
+                                                    (user.lang === 'jp' && _jp) ||
+                                                    (user.lang === 'cn' && _cn) ||
+                                                    (user.lang === 'de' && _de) ||
+                                                    (user.lang === 'fr' && _fr)
+                                                }
+                                                name="lang"
+                                                className="customInput"
+                                                disabled
+                                            />
+                                        </TableCell>
+                                        <TableCell align="left">
+                                            <select value={user.adAgree} name="adAgree" className="customSelect" disabled>
+                                                <option value="1">Agree</option>
+                                                <option value="0">Disagree</option>
+                                            </select>
                                         </TableCell>
                                         <TableCell align="left" className="hidden">
-                                            <p>{user.deleted}</p>
+                                            <input value={user.deleted} name="deleted" className="customInput" disabled />
                                         </TableCell>
                                         <TableCell align="left">{user.created}</TableCell>
                                         <TableCell align="left">{user.modified}</TableCell>
