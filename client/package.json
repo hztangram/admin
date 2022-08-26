@@ -1,6 +1,6 @@
 {
     "name": "Tangram Admin",
-    "proxy": "https://team-play.kr",
+    "proxy": "http://localhost:3000",
     "version": "3.2.0",
     "private": true,
     "homepage": ".",
