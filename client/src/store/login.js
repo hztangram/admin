@@ -5,7 +5,7 @@ import { createAsyncThunk, createSlice, current } from '@reduxjs/toolkit';
 export const postLogin = createAsyncThunk('POST_LOGIN', async (payload, { getState, rejectWithValue }) => {
     let { result } = payload;
     try {
-        const response = await axios.post('https://team-play.kr/api/tgAdmin/login', result);
+        const response = await axios.post('https://team-play.kr/tangramAdmin/tangramAdmin/login', result);
         if (response.data.success) {
             alert(response.data.message);
             return true;
@@ -37,4 +37,4 @@ export const login = createSlice({
     }
 });
 
-export let {} = login.actions;
+export let { } = login.actions;

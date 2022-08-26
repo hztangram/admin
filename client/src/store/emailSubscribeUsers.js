@@ -6,7 +6,7 @@ export const getUsers = createAsyncThunk('GET_USERS', async (payload, { getState
     const pageSize = payload.pageSize || getState().emailSubscribeUsers.pageSize;
     const pages = { currentPage: currentPage, pageSize: pageSize };
     try {
-        const res = await axios.post('https://team-play.kr/api/tgAdmin/get/emailSubscribers', pages);
+        const res = await axios.post('https://team-play.kr/tangramAdmin/tangramAdmin/get/emailSubscribers', pages);
         if (res.data.success) {
             const users = res.data.users.map((user) => {
                 return {
@@ -48,7 +48,7 @@ export const updateUsers = createAsyncThunk('UPDATE_USERS', async (payload, { ge
 
     if (confirm('고객 정보를 수정하시겠습니까?')) {
         try {
-            const response = await axios.post('https://team-play.kr/api/tgAdmin/update/emailSubscribers', newData);
+            const response = await axios.post('https://team-play.kr/tangramAdmin/tangramAdmin/update/emailSubscribers', newData);
             if (response.data.success) {
                 alert('수정이 완료되었습니다.');
                 return response;
@@ -85,7 +85,7 @@ export const deleteUsers = createAsyncThunk('DELETE_USERS', async (payload, { ge
     });
     if (confirm('고객 정보를 삭제하시겠습니까?')) {
         try {
-            const response = await axios.post('https://team-play.kr/api/tgAdmin/delete/emailSubscribers', deleteData);
+            const response = await axios.post('https://team-play.kr/tangramAdmin/tangramAdmin/delete/emailSubscribers', deleteData);
             if (response.data.success) {
                 alert('삭제가 완료되었습니다.');
                 return response;
