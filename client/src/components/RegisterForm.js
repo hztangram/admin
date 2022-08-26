@@ -18,11 +18,12 @@ const RegisterForm = () => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const success = useSelector((state) => state.register.success);
+    const defaultPath = useSelector((state) => state.defaults.defaultPath);
     const navigate = useNavigate();
     useEffect(() => {
         if (success) {
-            dispatch(setSuccess({ result: false }));
-            navigate('/');
+            dispatch(setSuccess({ success: false }));
+            navigate(defaultPath);
         }
     }, [success]);
 

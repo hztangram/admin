@@ -5,7 +5,7 @@ import { createAsyncThunk, createSlice, current } from '@reduxjs/toolkit';
 export const postLogin = createAsyncThunk('POST_LOGIN', async (payload, { getState, rejectWithValue }) => {
     let { result } = payload;
     try {
-        const response = await axios.post('http://localhost:8080/api/tgAdmin/login', result);
+        const response = await axios.post('https://team-play.kr/api/tgAdmin/login', result);
         if (response.data.success) {
             alert(response.data.message);
             return true;
@@ -27,12 +27,12 @@ export const postLogin = createAsyncThunk('POST_LOGIN', async (payload, { getSta
 
 export const login = createSlice({
     name: 'login',
-    initialState: {},
+    initialState: { success: false },
     reducers: {},
-
     extraReducers: {
         [postLogin.fulfilled]: (state, { payload }) => {
-            state.success = true;
+            if (payload) state.success = true;
+            else state.success = false;
         }
     }
 });

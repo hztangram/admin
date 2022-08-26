@@ -1,8 +1,9 @@
 {
     "name": "Tangram Admin",
+    "proxy": "https://team-play.kr",
     "version": "3.2.0",
     "private": true,
-    "homepage": "https://tangramfactory.com/tangramAdmin",
+    "homepage": ".",
     "dependencies": {
         "@emotion/cache": "^11.9.3",
         "@emotion/react": "^11.9.3",
@@ -28,10 +29,11 @@
         "react-perfect-scrollbar": "^1.5.8",
         "react-redux": "^8.0.2",
         "react-router": "6.3.0",
-        "react-router-dom": "6.3.0",
+        "react-router-dom": "^6.3.0",
         "react-scripts": "^5.0.1",
         "redux": "^4.2.0",
         "redux-toolkit": "^1.1.2",
+        "serve": "^14.0.1",
         "yup": "^0.32.11"
     },
     "scripts": {

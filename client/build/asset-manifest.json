@@ -1,44 +1,14 @@
 {
   "files": {
-    "main.css": "/tangramAdmin/static/css/main.2e23de01.css",
-    "main.js": "/tangramAdmin/static/js/main.e01c9a65.js",
-    "static/js/728.4c981ed7.chunk.js": "/tangramAdmin/static/js/728.4c981ed7.chunk.js",
-    "static/js/319.f9e1e9b5.chunk.js": "/tangramAdmin/static/js/319.f9e1e9b5.chunk.js",
-    "static/js/338.da4395b4.chunk.js": "/tangramAdmin/static/js/338.da4395b4.chunk.js",
-    "static/js/832.1f7d7d93.chunk.js": "/tangramAdmin/static/js/832.1f7d7d93.chunk.js",
-    "static/js/80.49143650.chunk.js": "/tangramAdmin/static/js/80.49143650.chunk.js",
-    "static/js/584.7688f5f9.chunk.js": "/tangramAdmin/static/js/584.7688f5f9.chunk.js",
-    "static/js/758.af49b052.chunk.js": "/tangramAdmin/static/js/758.af49b052.chunk.js",
-    "static/js/773.9223297b.chunk.js": "/tangramAdmin/static/js/773.9223297b.chunk.js",
-    "static/js/418.4eee915b.chunk.js": "/tangramAdmin/static/js/418.4eee915b.chunk.js",
-    "static/js/170.da8b834e.chunk.js": "/tangramAdmin/static/js/170.da8b834e.chunk.js",
-    "static/js/68.77e2ee4f.chunk.js": "/tangramAdmin/static/js/68.77e2ee4f.chunk.js",
-    "static/js/75.35a4655a.chunk.js": "/tangramAdmin/static/js/75.35a4655a.chunk.js",
-    "static/js/720.7a8d4def.chunk.js": "/tangramAdmin/static/js/720.7a8d4def.chunk.js",
-    "static/js/653.408fc0b5.chunk.js": "/tangramAdmin/static/js/653.408fc0b5.chunk.js",
-    "static/media/user-round.svg": "/tangramAdmin/static/media/user-round.13b5a31bebd2cc6016d6db2cac8e92d1.svg",
-    "index.html": "/tangramAdmin/index.html",
-    "static/media/social-google.svg": "/tangramAdmin/static/media/social-google.9887eb8eb43729cb99f402cfa0de3c44.svg",
-    "static/media/earning.svg": "/tangramAdmin/static/media/earning.b019e86a7ee117bd6bb2e8cab90c0db5.svg",
-    "main.2e23de01.css.map": "/tangramAdmin/static/css/main.2e23de01.css.map",
-    "main.e01c9a65.js.map": "/tangramAdmin/static/js/main.e01c9a65.js.map",
-    "728.4c981ed7.chunk.js.map": "/tangramAdmin/static/js/728.4c981ed7.chunk.js.map",
-    "319.f9e1e9b5.chunk.js.map": "/tangramAdmin/static/js/319.f9e1e9b5.chunk.js.map",
-    "338.da4395b4.chunk.js.map": "/tangramAdmin/static/js/338.da4395b4.chunk.js.map",
-    "832.1f7d7d93.chunk.js.map": "/tangramAdmin/static/js/832.1f7d7d93.chunk.js.map",
-    "80.49143650.chunk.js.map": "/tangramAdmin/static/js/80.49143650.chunk.js.map",
-    "584.7688f5f9.chunk.js.map": "/tangramAdmin/static/js/584.7688f5f9.chunk.js.map",
-    "758.af49b052.chunk.js.map": "/tangramAdmin/static/js/758.af49b052.chunk.js.map",
-    "773.9223297b.chunk.js.map": "/tangramAdmin/static/js/773.9223297b.chunk.js.map",
-    "418.4eee915b.chunk.js.map": "/tangramAdmin/static/js/418.4eee915b.chunk.js.map",
-    "170.da8b834e.chunk.js.map": "/tangramAdmin/static/js/170.da8b834e.chunk.js.map",
-    "68.77e2ee4f.chunk.js.map": "/tangramAdmin/static/js/68.77e2ee4f.chunk.js.map",
-    "75.35a4655a.chunk.js.map": "/tangramAdmin/static/js/75.35a4655a.chunk.js.map",
-    "720.7a8d4def.chunk.js.map": "/tangramAdmin/static/js/720.7a8d4def.chunk.js.map",
-    "653.408fc0b5.chunk.js.map": "/tangramAdmin/static/js/653.408fc0b5.chunk.js.map"
+    "main.css": "./static/css/main.2e23de01.css",
+    "main.js": "./static/js/main.e096360f.js",
+    "static/media/user-round.svg": "./static/media/user-round.13b5a31bebd2cc6016d6db2cac8e92d1.svg",
+    "index.html": "./index.html",
+    "main.2e23de01.css.map": "./static/css/main.2e23de01.css.map",
+    "main.e096360f.js.map": "./static/js/main.e096360f.js.map"
   },
   "entrypoints": [
     "static/css/main.2e23de01.css",
-    "static/js/main.e01c9a65.js"
+    "static/js/main.e096360f.js"
   ]
 }

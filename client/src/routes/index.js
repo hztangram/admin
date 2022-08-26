@@ -17,9 +17,10 @@ import TotalRoutes from './TotalRoutes';
 export default function ThemeRoutes() {
     const dispatch = useDispatch();
     const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+    const defaultPath = useSelector((state) => state.defaults.defaultPath);
     useMemo(() => {
         dispatch(checkLogin());
-        console.log('isLoggedIn' + isLoggedIn);
     }, [isLoggedIn]);
-    return useRoutes(TotalRoutes(isLoggedIn));
+    console.log(isLoggedIn);
+    return useRoutes(TotalRoutes(isLoggedIn, defaultPath));
 }

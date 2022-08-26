@@ -23,7 +23,7 @@ app.use(
   })
 )
 const corsOptions = {
-  origin: "http://localhost:3000",
+  origin: "http://tangramfactory.com",
   credentials: true,
 }
 app.use(cors(corsOptions))
@@ -43,7 +43,7 @@ app.use(
     secret: process.env.SECRET,
     resave: false,
     saveUninitialized: true,
-    cookie: { maxAge: 24000 * 60 * 60 },
+    cookie: { maxAge: 24000 * 60 * 60, sameSite: "none" },
   })
 )
 
@@ -225,6 +225,11 @@ app.post("/api/tgAdmin/register", async (req, res) => {
 app.post("/api/tgAdmin/login", async (req, res) => {
   let { email, password } = req.body
   let connection
+
+  res.header("Access-Control-Allow-Origin", "http://tangramfactory.com")
+  res.header("Access-Control-Allow-Headers", "X-Requested-With")
+  res.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE")
+
   try {
     connection = await mysql.getConnection()
     await connection.beginTransaction()
@@ -249,6 +254,7 @@ app.post("/api/tgAdmin/login", async (req, res) => {
             success: true,
             message: "로그인 성공!",
             code: 0,
+            sessionis: req.session.isLoggedIn,
           })
         })
       } else {
@@ -276,16 +282,18 @@ app.post("/api/tgAdmin/login", async (req, res) => {
       message: err.message,
       code: err.code,
     })
+
+    console.log(req.session)
   }
 })
 
 app.post("/api/tgAdmin/checklogin", async (req, res) => {
-  console.log(req.session)
   if (req.session.isLoggedIn) {
     res.send({ isLoggedIn: true, userName: req.session.author_name })
   } else {
     res.send({ isLoggedIn: false })
   }
+  console.log(req.session)
 })
 
 app.listen(PORT, () => console.log(`Server Start Listening on port ${PORT}`))

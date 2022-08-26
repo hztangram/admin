@@ -10,7 +10,7 @@ export const postRegister = createAsyncThunk('POST_REGISTER', async (payload, { 
         password: password
     };
     try {
-        const response = await axios.post('http://localhost:8080/api/tgAdmin/register', userForm);
+        const response = await axios.post('https://team-play.kr/api/tgAdmin/register', userForm);
         if (response.data.success) {
             alert('회원가입이 완료되었습니다.');
             return true;
@@ -35,20 +35,15 @@ export const register = createSlice({
     },
     reducers: {
         setSuccess(state, { payload }) {
-            let { result } = payload;
+            let result = payload.success;
             state.success = result;
         }
     },
 
     extraReducers: {
-        [postRegister.pending]: (state, action) => {
-            console.log('pending');
-        },
         [postRegister.fulfilled]: (state, { payload }) => {
-            state.success = true;
-        },
-        [postRegister.rejected]: (state, action) => {
-            console.log('rejected' + action.payload);
+            if (payload) state.success = true;
+            else state.success = false;
         }
     }
 });

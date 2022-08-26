@@ -4,7 +4,7 @@ import { createAsyncThunk, createSlice, current } from '@reduxjs/toolkit';
 
 export const checkLogin = createAsyncThunk('CHECK_LOGIN', async (payload, { getState, rejectWithValue }) => {
     try {
-        const response = await axios.post('http://localhost:8080/api/tgAdmin/checklogin');
+        const response = await axios.post('https://team-play.kr/api/tgAdmin/checklogin');
         const result = response.data;
         console.log(result);
         return result;
@@ -22,15 +22,11 @@ export const auth = createSlice({
     },
     reducers: {},
     extraReducers: {
-        [checkLogin.pending]: (state, action) => {
-            console.log('pending');
-        },
         [checkLogin.fulfilled]: (state, { payload }) => {
             payload.isLoggedIn ? (state.isLoggedIn = true) : (state.isLoggedIn = false);
             state.userName = payload.userName;
-        },
-        [checkLogin.rejected]: (state, action) => {
-            console.log('rejected' + action.payload);
+            console.log('state.isLoggedIn' + state.isLoggedIn);
+            console.log('payload' + payload.isLoggedIn);
         }
     }
 });

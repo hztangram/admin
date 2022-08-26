@@ -26,18 +26,18 @@ const SamplePage = Loadable(lazy(() => import('views/sample-page')));
 
 // ==============================|| MAIN ROUTING ||============================== //
 
-const TotalRoutes = (isLoggedIn) => [
+const TotalRoutes = (isLoggedIn, defaultPath) => [
     isLoggedIn
         ? {
-              path: '/',
+              path: defaultPath,
               element: <MainLayout />,
               children: [
                   {
-                      path: '/',
+                      path: defaultPath,
                       element: <TangramUsers />
                   },
                   {
-                      path: 'dashboard',
+                      path: '/tangramAdmin/dashboard',
                       children: [
                           {
                               path: 'default',
@@ -57,15 +57,15 @@ const TotalRoutes = (isLoggedIn) => [
               ]
           }
         : {
-              path: '/',
+              path: defaultPath,
               element: <MinimalLayout />,
               children: [
                   {
-                      path: '/',
+                      path: defaultPath,
                       element: <SignIn />
                   },
                   {
-                      path: '/register',
+                      path: '/tangramAdmin/register',
                       element: <Register />
                   }
               ]

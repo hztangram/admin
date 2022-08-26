@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -15,10 +17,15 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { postLogin } from '../store/login';
+import { checkLogin } from '../store/auth';
 const theme = createTheme();
 
 export default function SignInForm() {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const success = useSelector((state) => state.login.success);
+    const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+    const defaultPath = useSelector((state) => state.defaults.defaultPath);
 
     const handleSubmit = (event) => {
         event.preventDefault();
@@ -65,7 +72,7 @@ export default function SignInForm() {
                         </Button>
                         <Grid container>
                             <Grid item>
-                                <Link href="register" variant="body2">
+                                <Link href="/tangramAdmin/register" variant="body2">
                                     {"Don't have an account? Sign Up"}
                                 </Link>
                             </Grid>
